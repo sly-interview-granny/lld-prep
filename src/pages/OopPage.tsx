@@ -1,8 +1,12 @@
 import { ConceptCard, ConceptGrid } from '../components/ConceptCard';
 import { oopConcepts } from '../content/oop';
-import { slugifyTitle } from '../lib/sectionNav';
+import { useSectionScrollSpy } from '../hooks/useSectionScrollSpy';
+import { slugify } from '../lib/sectionNav';
 
 export function OopPage() {
+  const sectionIds = oopConcepts.map((concept) => slugify(concept.title));
+  useSectionScrollSpy(sectionIds, '/oop');
+
   return (
     <div className="page">
       <header className="page__header">
@@ -17,7 +21,7 @@ export function OopPage() {
         {oopConcepts.map((concept) => (
           <ConceptCard
             key={concept.title}
-            id={slugifyTitle(concept.title)}
+            id={slugify(concept.title)}
             {...concept}
           />
         ))}

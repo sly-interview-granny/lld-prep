@@ -1,7 +1,11 @@
 import { ConceptCard, ConceptGrid } from '../components/ConceptCard';
 import { solidPrinciples } from '../content/solid';
+import { useSectionScrollSpy } from '../hooks/useSectionScrollSpy';
 
 export function SolidPage() {
+  const sectionIds = solidPrinciples.map(({ letter }) => letter.toLowerCase());
+  useSectionScrollSpy(sectionIds, '/solid');
+
   return (
     <div className="page">
       <header className="page__header">

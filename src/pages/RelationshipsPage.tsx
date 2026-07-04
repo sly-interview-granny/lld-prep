@@ -1,8 +1,12 @@
 import { ConceptCard, ConceptGrid } from '../components/ConceptCard';
 import { relationships } from '../content/relationships';
-import { slugifyTitle } from '../lib/sectionNav';
+import { useSectionScrollSpy } from '../hooks/useSectionScrollSpy';
+import { slugify } from '../lib/sectionNav';
 
 export function RelationshipsPage() {
+  const sectionIds = relationships.map((rel) => slugify(rel.title));
+  useSectionScrollSpy(sectionIds, '/relationships');
+
   return (
     <div className="page">
       <header className="page__header">
@@ -17,7 +21,7 @@ export function RelationshipsPage() {
         {relationships.map((rel) => (
           <ConceptCard
             key={rel.title}
-            id={slugifyTitle(rel.title)}
+            id={slugify(rel.title)}
             {...rel}
           />
         ))}

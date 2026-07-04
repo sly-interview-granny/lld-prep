@@ -1,13 +1,15 @@
-import { NavLink, useLocation, useParams, useSearchParams } from 'react-router-dom';
-import type { PatternCategory } from '../content/patterns';
-import { useVisitedPages } from '../hooks/useVisitedPages';
+import { NavLink, useLocation, useParams } from 'react-router-dom';
+import { patterns } from '../content/patterns';
+import { useActiveSection } from '../context/ActiveSectionContext';
+import { useVisited } from '../context/VisitedContext';
+import { useVisitedPatterns } from '../hooks/useVisitedPatterns';
 import {
-  getPatternNavByCategory,
-  oopNavItems,
-  patternCategories,
-  patternCategoryNavItems,
-  relationshipNavItems,
-  solidNavItems,
+  getSectionKey,
+  getSectionNav,
+  getSectionProgressPaths,
+  getSectionTitle,
+  isSectionNavItemActive,
+  type SectionNavItem,
 } from '../lib/sectionNav';
 
 interface SidebarProps {
@@ -23,192 +25,83 @@ const mainNav = [
   { to: '/patterns', label: 'All Patterns' },
 ];
 
-interface VisitedIndicatorProps {
-  visited: boolean;
-}
-
-function VisitedIndicator({ visited }: VisitedIndicatorProps) {
+function VisitStatus({ visited }: { visited: boolean }) {
   return (
     <span
-      className={`sidebar__progress${visited ? ' sidebar__progress--visited' : ''}`}
+      className={`sidebar__pattern-status${
+        visited
+          ? ' sidebar__pattern-status--visited'
+          : ' sidebar__pattern-status--unvisited'
+      }`}
       aria-hidden="true"
       title={visited ? 'Visited' : 'Not visited'}
-    />
+    >
+      {visited ? '✓' : null}
+    </span>
   );
 }
 
-interface SubNavLinkProps {
-  to: string;
-  label: string;
-  isActive: boolean;
-  visited: boolean;
-  onClose: () => void;
-  meta?: string;
-}
-
-function SubNavLink({
-  to,
-  label,
-  isActive,
-  visited,
-  onClose,
-  meta,
-}: SubNavLinkProps) {
+function SectionProgress({ visited, total }: { visited: number; total: number }) {
   return (
-    <li>
-      <NavLink
-        to={to}
-        className={`sidebar__link sidebar__link--sub${
-          isActive ? ' sidebar__link--active' : ''
-        }`}
-        onClick={onClose}
-      >
-        <span className="sidebar__link-label">
-          <VisitedIndicator visited={visited} />
-          <span>{label}</span>
-        </span>
-        {meta && <span className="sidebar__count">{meta}</span>}
-      </NavLink>
-    </li>
+    <p className="sidebar__progress">
+      {visited} / {total} visited
+    </p>
   );
 }
 
-function SectionSubNav({ onClose }: { onClose: () => void }) {
-  const { pathname, hash } = useLocation();
-  const [searchParams] = useSearchParams();
-  const { slug } = useParams<{ slug: string }>();
-  const { isVisited } = useVisitedPages();
-
-  const currentHash = hash.replace('#', '').toLowerCase();
-  const categoryFilter = searchParams.get('category');
-
-  if (pathname === '/oop') {
-    return (
-      <div className="sidebar__section sidebar__section--subnav">
-        <p className="sidebar__section-title">In this section</p>
-        <ul className="sidebar__list sidebar__list--compact">
-          {oopNavItems.map((item) => (
-            <SubNavLink
-              key={item.hash}
-              to={item.path}
-              label={item.label}
-              isActive={currentHash === item.hash}
-              visited={isVisited(item.path) || isVisited('/oop')}
-              onClose={onClose}
-            />
-          ))}
-        </ul>
-      </div>
-    );
-  }
-
-  if (pathname === '/relationships') {
-    return (
-      <div className="sidebar__section sidebar__section--subnav">
-        <p className="sidebar__section-title">In this section</p>
-        <ul className="sidebar__list sidebar__list--compact">
-          {relationshipNavItems.map((item) => (
-            <SubNavLink
-              key={item.hash}
-              to={item.path}
-              label={item.label}
-              isActive={currentHash === item.hash}
-              visited={isVisited(item.path) || isVisited('/relationships')}
-              onClose={onClose}
-              meta={item.tag}
-            />
-          ))}
-        </ul>
-      </div>
-    );
-  }
-
-  if (pathname === '/solid') {
-    return (
-      <div className="sidebar__section sidebar__section--subnav">
-        <p className="sidebar__section-title">In this section</p>
-        <ul className="sidebar__list sidebar__list--compact">
-          {solidNavItems.map((item) => (
-            <SubNavLink
-              key={item.hash}
-              to={item.path}
-              label={`${item.letter} — ${item.label}`}
-              isActive={currentHash === item.hash}
-              visited={isVisited(item.path) || isVisited('/solid')}
-              onClose={onClose}
-            />
-          ))}
-        </ul>
-      </div>
-    );
-  }
-
-  if (pathname === '/patterns') {
-    return (
-      <div className="sidebar__section sidebar__section--subnav">
-        <p className="sidebar__section-title">Browse by category</p>
-        <ul className="sidebar__list sidebar__list--compact">
-          <SubNavLink
-            to="/patterns"
-            label="All patterns"
-            isActive={!categoryFilter}
-            visited={isVisited('/patterns')}
-            onClose={onClose}
-          />
-          {patternCategoryNavItems.map((item) => {
-            const normalized = item.category.toLowerCase();
-            return (
-              <SubNavLink
-                key={item.category}
-                to={item.path}
-                label={item.label}
-                isActive={categoryFilter?.toLowerCase() === normalized}
-                visited={isVisited(item.path)}
-                onClose={onClose}
-                meta={String(item.count)}
-              />
-            );
-          })}
-        </ul>
-      </div>
-    );
-  }
-
-  if (pathname.startsWith('/patterns/') && slug) {
-    const grouped = getPatternNavByCategory();
-
-    return (
-      <div className="sidebar__section sidebar__section--subnav">
-        <p className="sidebar__section-title">All patterns</p>
-        {patternCategories.map((category) => (
-          <div key={category} className="sidebar__group">
-            <p
-              className={`sidebar__group-title sidebar__group-title--${category.toLowerCase()}`}
-            >
-              {category}
-            </p>
-            <ul className="sidebar__list sidebar__list--compact">
-              {grouped[category as PatternCategory].map((item) => (
-                <SubNavLink
-                  key={item.slug}
-                  to={item.path}
-                  label={item.label}
-                  isActive={slug === item.slug}
-                  visited={isVisited(item.path)}
-                  onClose={onClose}
-                />
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  return null;
+function SectionNavLink({
+  item,
+  isActive,
+  isVisited,
+  onClose,
+}: {
+  item: SectionNavItem;
+  isActive: boolean;
+  isVisited: boolean;
+  onClose: () => void;
+}) {
+  return (
+    <NavLink
+      to={item.to}
+      className={`sidebar__link sidebar__link--sub sidebar__link--pattern${
+        isActive ? ' sidebar__link--active' : ''
+      }`}
+      onClick={onClose}
+    >
+      <span className="sidebar__pattern-name">
+        <VisitStatus visited={isVisited} />
+        <span>{item.label}</span>
+      </span>
+    </NavLink>
+  );
 }
 
 export function Sidebar({ open, onClose }: SidebarProps) {
+  const location = useLocation();
+  const { slug: activeSlug } = useParams<{ slug: string }>();
+  const activeSection = useActiveSection();
+  const { isVisited, countVisited } = useVisited();
+  const {
+    isVisited: isPatternVisited,
+    visitedCount: patternVisitedCount,
+  } = useVisitedPatterns();
+
+  const section = getSectionKey(location.pathname);
+  const sectionNav = section ? getSectionNav(section, { activeSlug }) : [];
+  const isPatternDetail = Boolean(activeSlug && section === 'patterns');
+
+  const progressPaths = section ? getSectionProgressPaths(section) : [];
+  const pageVisitedCount = countVisited(progressPaths);
+  const pageTotal = progressPaths.length;
+
+  const resolveVisited = (item: SectionNavItem) => {
+    if (isPatternDetail) {
+      const slug = item.matchPath.replace('/patterns/', '');
+      return isPatternVisited(slug);
+    }
+    return isVisited(item.matchPath);
+  };
+
   return (
     <>
       {open && (
@@ -245,7 +138,51 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           </ul>
         </nav>
 
-        <SectionSubNav onClose={onClose} />
+        {section && sectionNav.length > 0 && (
+          <div className="sidebar__section sidebar__section--subnav">
+            <p className="sidebar__section-title">{getSectionTitle(section)}</p>
+            <SectionProgress
+              visited={isPatternDetail ? patternVisitedCount : pageVisitedCount}
+              total={isPatternDetail ? patterns.length : pageTotal}
+            />
+            {sectionNav.map((group) => (
+              <div key={group.title ?? 'default'} className="sidebar__group">
+                {group.title && (
+                  <p
+                    className={`sidebar__group-title${
+                      group.titleClassName ? ` ${group.titleClassName}` : ''
+                    }`}
+                  >
+                    {group.title}
+                  </p>
+                )}
+                <ul className="sidebar__list sidebar__list--compact">
+                  {group.items.map((item) => {
+                    const active = isSectionNavItemActive(
+                      item,
+                      location.pathname,
+                      location.search,
+                      location.hash,
+                      activeSlug,
+                      activeSection?.activeSectionId,
+                    );
+
+                    return (
+                      <li key={item.matchPath}>
+                        <SectionNavLink
+                          item={item}
+                          isActive={active}
+                          isVisited={resolveVisited(item)}
+                          onClose={onClose}
+                        />
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+          </div>
+        )}
       </aside>
     </>
   );

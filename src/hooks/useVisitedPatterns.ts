@@ -31,5 +31,10 @@ export function useVisitedPatterns() {
     [visited],
   );
 
-  return { visited, markVisited, isVisited };
+  return {
+    visited,
+    markVisited,
+    isVisited,
+    visitedCount: visited.size,
+  };
 }

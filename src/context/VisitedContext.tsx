@@ -8,25 +8,30 @@ import {
 } from 'react';
 import { useLocation } from 'react-router-dom';
 
-const STORAGE_KEY = 'lld-prep-visited';
+export const VISITED_PAGES_KEY = 'lld-prep-visited';
+export const VISITED_PAGES_EVENT = 'lld-prep-visited-changed';
 
 function loadVisited(): Set<string> {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(VISITED_PAGES_KEY);
     if (!raw) return new Set();
     const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? new Set(parsed as string[]) : new Set();
+    return Array.isArray(parsed)
+      ? new Set(parsed.filter((item): item is string => typeof item === 'string'))
+      : new Set();
   } catch {
     return new Set();
   }
 }
 
 function saveVisited(visited: Set<string>) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([...visited]));
+  localStorage.setItem(VISITED_PAGES_KEY, JSON.stringify([...visited]));
 }
 
 interface VisitedContextValue {
   isVisited: (path: string) => boolean;
+  markVisited: (path: string) => void;
+  countVisited: (paths: string[]) => number;
 }
 
 const VisitedContext = createContext<VisitedContextValue | null>(null);
@@ -37,23 +42,43 @@ export function VisitedProvider({ children }: { children: ReactNode }) {
 
   const fullPath = `${location.pathname}${location.search}${location.hash}`;
 
-  useEffect(() => {
+  const markVisited = useCallback((path: string) => {
     setVisited((prev) => {
-      if (prev.has(fullPath)) return prev;
+      if (prev.has(path)) return prev;
       const next = new Set(prev);
-      next.add(fullPath);
+      next.add(path);
       saveVisited(next);
+      window.dispatchEvent(new Event(VISITED_PAGES_EVENT));
       return next;
     });
-  }, [fullPath]);
+  }, []);
+
+  useEffect(() => {
+    markVisited(fullPath);
+  }, [fullPath, markVisited]);
+
+  useEffect(() => {
+    const sync = () => setVisited(loadVisited());
+    window.addEventListener(VISITED_PAGES_EVENT, sync);
+    window.addEventListener('storage', sync);
+    return () => {
+      window.removeEventListener(VISITED_PAGES_EVENT, sync);
+      window.removeEventListener('storage', sync);
+    };
+  }, []);
 
   const isVisited = useCallback(
     (path: string) => visited.has(path),
     [visited],
   );
 
+  const countVisited = useCallback(
+    (paths: string[]) => paths.filter((path) => visited.has(path)).length,
+    [visited],
+  );
+
   return (
-    <VisitedContext.Provider value={{ isVisited }}>
+    <VisitedContext.Provider value={{ isVisited, markVisited, countVisited }}>
       {children}
     </VisitedContext.Provider>
   );
