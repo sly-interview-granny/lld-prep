@@ -820,6 +820,25 @@ a:hover {
   color: var(--text-muted);
 }
 
+.scaffold-section__tips--avoid li::marker {
+  color: color-mix(in srgb, var(--text-muted) 70%, #c45);
+}
+
+.scaffold-section__tips--mistakes li::marker {
+  color: color-mix(in srgb, var(--text-muted) 70%, #a65);
+}
+
+.scaffold-section--insight {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border-subtle));
+  background: color-mix(in srgb, var(--accent) 6%, var(--bg-secondary));
+}
+
+.scaffold-section__insight {
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+  line-height: 1.65;
+}
+
 .pattern-nav {
   display: flex;
   justify-content: space-between;

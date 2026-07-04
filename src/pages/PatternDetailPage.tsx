@@ -2,20 +2,53 @@ import { Link, useParams } from 'react-router-dom';
 import { CodeTabs } from '../components/CodeTabs';
 import { getAdjacentPatterns, getPatternBySlug } from '../content/patterns';
 
-interface ScaffoldSectionProps {
+interface TextSectionProps {
   title: string;
   content?: string;
 }
 
-function ScaffoldSection({ title, content }: ScaffoldSectionProps) {
+function TextSection({ title, content }: TextSectionProps) {
+  if (!content?.trim()) return null;
+
   return (
     <section className="scaffold-section">
       <h2 className="scaffold-section__title">{title}</h2>
-      {content ? (
-        <p className="scaffold-section__content">{content}</p>
-      ) : (
-        <p className="scaffold-section__placeholder">Add notes</p>
-      )}
+      <p className="scaffold-section__content">{content}</p>
+    </section>
+  );
+}
+
+interface ListSectionProps {
+  title: string;
+  items?: string[];
+}
+
+function ListSection({ title, items }: ListSectionProps) {
+  if (!items?.length) return null;
+
+  return (
+    <section className="scaffold-section">
+      <h2 className="scaffold-section__title">{title}</h2>
+      <ul className="scaffold-section__tips">
+        {items.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+interface InsightSectionProps {
+  insight?: string;
+}
+
+function InsightSection({ insight }: InsightSectionProps) {
+  if (!insight?.trim()) return null;
+
+  return (
+    <section className="scaffold-section scaffold-section--insight">
+      <h2 className="scaffold-section__title">Key insight</h2>
+      <p className="scaffold-section__insight">{insight}</p>
     </section>
   );
 }
@@ -27,34 +60,12 @@ interface CodeSectionProps {
 
 function CodeSection({ python, java }: CodeSectionProps) {
   const hasCode = Boolean(python?.trim() || java?.trim());
+  if (!hasCode) return null;
 
   return (
     <section className="scaffold-section">
       <h2 className="scaffold-section__title">Code</h2>
-      {hasCode ? (
-        <CodeTabs python={python} java={java} variant="scaffold" />
-      ) : (
-        <p className="scaffold-section__placeholder">Add notes</p>
-      )}
-    </section>
-  );
-}
-
-interface InterviewTipsSectionProps {
-  tips?: string[];
-}
-
-function InterviewTipsSection({ tips }: InterviewTipsSectionProps) {
-  if (!tips?.length) return null;
-
-  return (
-    <section className="scaffold-section">
-      <h2 className="scaffold-section__title">Interview tips</h2>
-      <ul className="scaffold-section__tips">
-        {tips.map((tip) => (
-          <li key={tip}>{tip}</li>
-        ))}
-      </ul>
+      <CodeTabs python={python} java={java} variant="scaffold" />
     </section>
   );
 }
@@ -97,17 +108,17 @@ export function PatternDetailPage() {
       </header>
 
       <div className="scaffold-sections">
-        <ScaffoldSection title="Intent" content={pattern.intent} />
-        <ScaffoldSection title="When to use" content={pattern.whenToUse} />
-        <ScaffoldSection
-          title="Real-world example"
-          content={pattern.example}
-        />
+        <TextSection title="Intent" content={pattern.intent} />
+        <ListSection title="When to use" items={pattern.whenToUse} />
+        <ListSection title="When not to use" items={pattern.whenNotToUse} />
+        <TextSection title="Real-world example" content={pattern.example} />
+        <InsightSection insight={pattern.keyInsight} />
         <CodeSection
           python={pattern.codePython}
           java={pattern.codeJava}
         />
-        <InterviewTipsSection tips={pattern.interviewTips} />
+        <ListSection title="Interview tips" items={pattern.interviewTips} />
+        <ListSection title="Common mistakes" items={pattern.commonMistakes} />
       </div>
 
       {(prev || next) && (

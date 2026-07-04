@@ -7,9 +7,11 @@ export interface ConceptCardProps {
   definition: string;
   analogy: string;
   whenAsked: string;
+  detailedExample?: string;
   codePython: string;
   codeJava: string;
   interviewTips: string[];
+  commonMistakes?: string[];
   tag?: string;
   badge?: string;
 }
@@ -35,9 +37,11 @@ export function ConceptCard({
   definition,
   analogy,
   whenAsked,
+  detailedExample,
   codePython,
   codeJava,
   interviewTips,
+  commonMistakes,
   tag,
   badge,
 }: ConceptCardProps) {
@@ -58,6 +62,12 @@ export function ConceptCard({
         <ConceptSection title="Real-world analogy">
           <p className="concept-card__text">{analogy}</p>
         </ConceptSection>
+
+        {detailedExample && (
+          <ConceptSection title="Software example">
+            <p className="concept-card__text">{detailedExample}</p>
+          </ConceptSection>
+        )}
 
         <ConceptSection title="When interviewers ask">
           <p className="concept-card__text">{whenAsked}</p>
@@ -82,6 +92,16 @@ export function ConceptCard({
             ))}
           </ul>
         </ConceptSection>
+
+        {commonMistakes && commonMistakes.length > 0 && (
+          <ConceptSection title="Common mistakes">
+            <ul className="concept-card__tips concept-card__tips--mistakes">
+              {commonMistakes.map((mistake) => (
+                <li key={mistake}>{mistake}</li>
+              ))}
+            </ul>
+          </ConceptSection>
+        )}
       </div>
     </article>
   );
