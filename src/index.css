@@ -711,6 +711,18 @@ a:hover {
   gap: 0.75rem;
 }
 
+.pattern-detail__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.pattern-detail__supplement {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
 .pattern-body {
   display: flex;
   flex-direction: column;
