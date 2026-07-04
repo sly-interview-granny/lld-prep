@@ -1,12 +1,14 @@
 import { useEffect } from 'react';
 import { useActiveSection } from '../context/ActiveSectionContext';
+import { useVisited } from '../context/VisitedContext';
 
-/** Tracks which anchor section is in view for sidebar highlighting. */
+/** Tracks which anchor section is in view for sidebar highlighting and visit progress. */
 export function useSectionScrollSpy(
   sectionIds: string[],
-  _basePath: string,
+  basePath: string,
 ) {
   const activeSection = useActiveSection();
+  const { markVisited } = useVisited();
   const setActiveSectionId = activeSection?.setActiveSectionId;
 
   useEffect(() => {
@@ -29,7 +31,9 @@ export function useSectionScrollSpy(
 
         if (visible.length === 0) return;
 
-        setActiveSectionId(visible[0].target.id);
+        const id = visible[0].target.id;
+        setActiveSectionId(id);
+        markVisited(`${basePath}#${id}`);
       },
       { rootMargin: '-15% 0px -55% 0px', threshold: 0 },
     );
@@ -37,7 +41,7 @@ export function useSectionScrollSpy(
     elements.forEach((element) => observer.observe(element));
 
     return () => observer.disconnect();
-  }, [sectionIds, setActiveSectionId]);
+  }, [sectionIds, basePath, setActiveSectionId, markVisited]);
 
   useEffect(() => {
     return () => setActiveSectionId?.(null);

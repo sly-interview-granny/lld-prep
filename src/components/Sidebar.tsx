@@ -1,8 +1,10 @@
 import { NavLink, useLocation, useParams } from 'react-router-dom';
 import { useActiveSection } from '../context/ActiveSectionContext';
+import { useVisited } from '../context/VisitedContext';
 import {
   getSectionKey,
   getSectionNav,
+  getSectionProgressPaths,
   getSectionTitle,
   isSectionNavItemActive,
   type SectionNavItem,
@@ -21,13 +23,39 @@ const mainNav = [
   { to: '/patterns', label: 'All Patterns' },
 ];
 
+function VisitStatus({ visited }: { visited: boolean }) {
+  return (
+    <span
+      className={`sidebar__pattern-status${
+        visited
+          ? ' sidebar__pattern-status--visited'
+          : ' sidebar__pattern-status--unvisited'
+      }`}
+      aria-hidden="true"
+      title={visited ? 'Visited' : 'Not visited'}
+    >
+      {visited ? '✓' : null}
+    </span>
+  );
+}
+
+function SectionProgress({ visited, total }: { visited: number; total: number }) {
+  return (
+    <p className="sidebar__progress">
+      {visited} / {total} visited
+    </p>
+  );
+}
+
 function SectionNavLink({
   item,
   isActive,
+  isVisited,
   onClose,
 }: {
   item: SectionNavItem;
   isActive: boolean;
+  isVisited: boolean;
   onClose: () => void;
 }) {
   return (
@@ -38,7 +66,10 @@ function SectionNavLink({
       }`}
       onClick={onClose}
     >
-      {item.label}
+      <span className="sidebar__pattern-name">
+        <VisitStatus visited={isVisited} />
+        <span>{item.label}</span>
+      </span>
     </NavLink>
   );
 }
@@ -47,9 +78,11 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const location = useLocation();
   const { slug: activeSlug } = useParams<{ slug: string }>();
   const activeSection = useActiveSection();
+  const { isVisited, countVisited } = useVisited();
 
   const section = getSectionKey(location.pathname);
   const sectionNav = section ? getSectionNav(section, { activeSlug }) : [];
+  const progressPaths = section ? getSectionProgressPaths(section) : [];
 
   return (
     <>
@@ -90,6 +123,10 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         {section && sectionNav.length > 0 && (
           <div className="sidebar__section sidebar__section--subnav">
             <p className="sidebar__section-title">{getSectionTitle(section)}</p>
+            <SectionProgress
+              visited={countVisited(progressPaths)}
+              total={progressPaths.length}
+            />
             {sectionNav.map((group) => (
               <div key={group.title ?? 'default'} className="sidebar__group">
                 {group.title && (
@@ -117,6 +154,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                         <SectionNavLink
                           item={item}
                           isActive={active}
+                          isVisited={isVisited(item.matchPath)}
                           onClose={onClose}
                         />
                       </li>
