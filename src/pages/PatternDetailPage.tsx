@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router-dom';
 import { CodeTabs } from '../components/CodeTabs';
+import { MarkdownContent } from '../components/MarkdownContent';
 import { getAdjacentPatterns, getPatternBySlug } from '../content/patterns';
 
 interface TextSectionProps {
@@ -115,27 +116,31 @@ export function PatternDetailPage() {
         <h1 className="page__title">{pattern.name}</h1>
       </header>
 
-      <div className="scaffold-sections">
-        <TextSection title="Intent" content={pattern.intent} />
-        <ListSection title="When to use" items={pattern.whenToUse} />
-        <ListSection
-          title="When not to use"
-          items={pattern.whenToAvoid}
-          variant="avoid"
-        />
-        <TextSection title="Real-world example" content={pattern.example} />
-        <InsightSection insight={pattern.keyInsight} />
-        <ListSection
-          title="Common mistakes"
-          items={pattern.commonMistakes}
-          variant="mistakes"
-        />
-        <CodeSection
-          python={pattern.codePython}
-          java={pattern.codeJava}
-        />
-        <ListSection title="Interview tips" items={pattern.interviewTips} />
-      </div>
+      {pattern.body ? (
+        <MarkdownContent content={pattern.body} />
+      ) : (
+        <div className="scaffold-sections">
+          <TextSection title="Intent" content={pattern.intent} />
+          <ListSection title="When to use" items={pattern.whenToUse} />
+          <ListSection
+            title="When not to use"
+            items={pattern.whenToAvoid}
+            variant="avoid"
+          />
+          <TextSection title="Real-world example" content={pattern.example} />
+          <InsightSection insight={pattern.keyInsight} />
+          <ListSection
+            title="Common mistakes"
+            items={pattern.commonMistakes}
+            variant="mistakes"
+          />
+          <CodeSection
+            python={pattern.codePython}
+            java={pattern.codeJava}
+          />
+          <ListSection title="Interview tips" items={pattern.interviewTips} />
+        </div>
+      )}
 
       {(prev || next) && (
         <nav className="pattern-detail-nav" aria-label="Pattern navigation">

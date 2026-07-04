@@ -1,3 +1,5 @@
+import { behaviouralBodies } from './behaviouralBodies';
+import { creationalStructuralBodies } from './creationalStructuralBodies';
 import { patternSnippets } from './patternSnippets';
 
 export type PatternCategory = 'Creational' | 'Structural' | 'Behavioural';
@@ -6,6 +8,8 @@ export interface Pattern {
   slug: string;
   name: string;
   category: PatternCategory;
+  /** Rich narrative markdown for interview-style pattern pages */
+  body?: string;
   intent?: string;
   whenToUse?: string[];
   whenToAvoid?: string[];
@@ -973,6 +977,11 @@ const patternMeta: Omit<Pattern, 'codePython' | 'codeJava'>[] = [
 export const patterns: Pattern[] = patternMeta.map((meta) => ({
   ...meta,
   ...patternSnippets[meta.slug],
+  ...(behaviouralBodies[meta.slug]
+    ? { body: behaviouralBodies[meta.slug] }
+    : creationalStructuralBodies[meta.slug]
+      ? { body: creationalStructuralBodies[meta.slug] }
+      : {}),
 }));
 
 export function getPatternBySlug(slug: string): Pattern | undefined {
