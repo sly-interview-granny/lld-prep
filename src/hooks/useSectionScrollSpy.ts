@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useActiveSection } from '../context/ActiveSectionContext';
 
@@ -18,12 +18,21 @@ export function useSectionScrollSpy(
   const location = useLocation();
   const activeSection = useActiveSection();
   const setActiveSectionId = activeSection?.setActiveSectionId;
+  const scrolledToHash = useRef<string | null>(null);
+  const hashScrollKey = `${location.pathname}${location.hash}`;
+  const sectionIdsKey = sectionIds.join('\0');
 
   useEffect(() => {
-    if (!location.hash || location.pathname !== basePath) return;
+    if (!location.hash || location.pathname !== basePath) {
+      scrolledToHash.current = null;
+      return;
+    }
 
     const id = decodeURIComponent(location.hash.slice(1));
     if (!sectionIds.includes(id)) return;
+
+    if (scrolledToHash.current === hashScrollKey) return;
+    scrolledToHash.current = hashScrollKey;
 
     const frame = requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -34,7 +43,7 @@ export function useSectionScrollSpy(
     });
 
     return () => cancelAnimationFrame(frame);
-  }, [location.hash, location.pathname, basePath, sectionIds, setActiveSectionId]);
+  }, [hashScrollKey, basePath, sectionIdsKey, setActiveSectionId]);
 
   useEffect(() => {
     if (!setActiveSectionId) return;
@@ -64,7 +73,7 @@ export function useSectionScrollSpy(
     elements.forEach((element) => observer.observe(element));
 
     return () => observer.disconnect();
-  }, [sectionIds, setActiveSectionId]);
+  }, [sectionIdsKey, setActiveSectionId]);
 
   useEffect(() => {
     return () => setActiveSectionId?.(null);
