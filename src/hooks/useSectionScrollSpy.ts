@@ -1,13 +1,40 @@
 import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useActiveSection } from '../context/ActiveSectionContext';
 
-/** Tracks which anchor section is in view for sidebar highlighting. */
+function scrollToSectionId(id: string) {
+  const element = document.getElementById(id);
+  if (!element) return false;
+
+  element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  return true;
+}
+
+/** Tracks which anchor section is in view and scrolls to hash targets. */
 export function useSectionScrollSpy(
   sectionIds: string[],
-  _basePath: string,
+  basePath: string,
 ) {
+  const location = useLocation();
   const activeSection = useActiveSection();
   const setActiveSectionId = activeSection?.setActiveSectionId;
+
+  useEffect(() => {
+    if (!location.hash || location.pathname !== basePath) return;
+
+    const id = decodeURIComponent(location.hash.slice(1));
+    if (!sectionIds.includes(id)) return;
+
+    const frame = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (scrollToSectionId(id)) {
+          setActiveSectionId?.(id);
+        }
+      });
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [location.hash, location.pathname, basePath, sectionIds, setActiveSectionId]);
 
   useEffect(() => {
     if (!setActiveSectionId) return;

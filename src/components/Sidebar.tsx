@@ -1,4 +1,4 @@
-import { NavLink, useLocation, useParams } from 'react-router-dom';
+import { Link, NavLink, useLocation, useParams } from 'react-router-dom';
 import { useActiveSection } from '../context/ActiveSectionContext';
 import {
   getSectionKey,
@@ -31,15 +31,16 @@ function SectionNavLink({
   onClose: () => void;
 }) {
   return (
-    <NavLink
+    <Link
       to={item.to}
       className={`sidebar__link sidebar__link--sub sidebar__link--pattern${
         isActive ? ' sidebar__link--active' : ''
       }`}
       onClick={onClose}
+      aria-current={isActive ? 'page' : undefined}
     >
       {item.label}
-    </NavLink>
+    </Link>
   );
 }
 
