@@ -30,13 +30,29 @@ function SectionNavLink({
   isActive: boolean;
   onClose: () => void;
 }) {
+  const handleClick = () => {
+    const hashIndex = item.to.indexOf('#');
+    if (hashIndex !== -1) {
+      const id = decodeURIComponent(item.to.slice(hashIndex + 1));
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          document.getElementById(id)?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+          });
+        });
+      });
+    }
+    onClose();
+  };
+
   return (
     <Link
       to={item.to}
       className={`sidebar__link sidebar__link--sub sidebar__link--pattern${
         isActive ? ' sidebar__link--active' : ''
       }`}
-      onClick={onClose}
+      onClick={handleClick}
       aria-current={isActive ? 'page' : undefined}
     >
       {item.label}
