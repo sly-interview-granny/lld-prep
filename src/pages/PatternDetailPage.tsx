@@ -21,15 +21,23 @@ function TextSection({ title, content }: TextSectionProps) {
 interface ListSectionProps {
   title: string;
   items?: string[];
+  variant?: 'default' | 'avoid' | 'mistakes';
 }
 
-function ListSection({ title, items }: ListSectionProps) {
+function ListSection({ title, items, variant = 'default' }: ListSectionProps) {
   if (!items?.length) return null;
+
+  const listClass =
+    variant === 'avoid'
+      ? 'scaffold-section__tips scaffold-section__tips--avoid'
+      : variant === 'mistakes'
+        ? 'scaffold-section__tips scaffold-section__tips--mistakes'
+        : 'scaffold-section__tips';
 
   return (
     <section className="scaffold-section">
       <h2 className="scaffold-section__title">{title}</h2>
-      <ul className="scaffold-section__tips">
+      <ul className={listClass}>
         {items.map((item) => (
           <li key={item}>{item}</li>
         ))}
@@ -110,15 +118,23 @@ export function PatternDetailPage() {
       <div className="scaffold-sections">
         <TextSection title="Intent" content={pattern.intent} />
         <ListSection title="When to use" items={pattern.whenToUse} />
-        <ListSection title="When not to use" items={pattern.whenNotToUse} />
+        <ListSection
+          title="When not to use"
+          items={pattern.whenToAvoid}
+          variant="avoid"
+        />
         <TextSection title="Real-world example" content={pattern.example} />
         <InsightSection insight={pattern.keyInsight} />
+        <ListSection
+          title="Common mistakes"
+          items={pattern.commonMistakes}
+          variant="mistakes"
+        />
         <CodeSection
           python={pattern.codePython}
           java={pattern.codeJava}
         />
         <ListSection title="Interview tips" items={pattern.interviewTips} />
-        <ListSection title="Common mistakes" items={pattern.commonMistakes} />
       </div>
 
       {(prev || next) && (

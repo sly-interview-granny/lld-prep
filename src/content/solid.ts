@@ -8,13 +8,13 @@ export const solidPrinciples: SolidPrinciple[] = [
     title: 'Single Responsibility Principle',
     description: 'A class should have only one reason to change.',
     definition:
-      'The Single Responsibility Principle (SRP) states that a class should have one, and only one, reason to change — meaning it should encapsulate a single axis of responsibility tied to one actor or stakeholder concern. If OrderService validates orders, calculates tax, persists to the database, and sends confirmation emails, a change to SMTP configuration forces redeploying order validation logic. Splitting these into OrderValidator, TaxCalculator, OrderRepository, and NotificationService isolates change blast radius. SRP improves testability because each unit has a narrow surface area to mock and assert. It does not mean "one method per class" — cohesive operations that belong to the same concern (all CRUD on Order) can live together. At scale, SRP applies to modules and microservices too: a payment service should not also own user profile photos.',
+      'SRP states that a class should have a single, well-defined responsibility — one axis of change driven by one actor or stakeholder. If a class handles both order validation and email notifications, a change to SMTP configuration forces you to touch and redeploy order logic. Splitting responsibilities into focused classes improves testability, readability, and parallel development. Responsibility means "reason to change," not "one method only" — a cohesive `InvoiceCalculator` with five related methods still has one job. SRP applies at every level: methods, classes, modules, and microservices. In LLD interviews, spotting the God class and proposing a clean split is one of the most common exercises.',
     analogy:
-      'In a restaurant, the chef cooks, the waiter serves, and the cashier handles payments — each role has one primary reason their workflow changes (menu updates affect the chef, POS upgrades affect the cashier, table layout affects the waiter). If one person did all three jobs, a menu change and a new payment terminal would both disrupt the same individual, creating unnecessary coupling and bottlenecks.',
+      'A restaurant: the chef cooks, the waiter serves, the cashier handles payments. If one person did all three, a menu change, a POS upgrade, and a health inspection would all disrupt the same employee — too many reasons to change. Specialized roles mean each person changes only when their domain changes.',
     detailedExample:
-      'In an e-commerce codebase, refactor UserManager (auth + CRUD + email + password reset) into AuthService, UserRepository, EmailNotifier, and PasswordResetHandler. When marketing requests a new welcome email template, you touch EmailNotifier only — OrderService and AuthService remain untouched. Unit tests for tax calculation no longer need to mock SMTP. This is the refactor interviewers expect when they show a 400-line "God class."',
+      'A `UserService` that authenticates users, sends welcome emails, and writes audit logs violates SRP. Split into `AuthService` (login, tokens), `NotificationService` (emails), and `AuditLogger` (compliance). When marketing changes email templates, only `NotificationService` changes. When security updates JWT logic, only `AuthService` changes. `OrderController` should delegate — not embed — business rules and persistence.',
     whenAsked:
-      'Q1: "Explain SOLID" — Give one crisp sentence per letter; SRP is usually first: one reason to change per class/module. Q2: "What violates SRP in this code?" — Identify mixed concerns (persistence + UI + business rules in one class) and name the separate actors who would request changes. Q3: "Isn\'t one method per class too granular?" — Clarify SRP is about cohesive responsibility, not counting methods. PayCalculator with calculate(), calculateOvertime(), and getTaxBracket() is fine — all change when payroll rules change.',
+      'Q: "Explain SOLID" or "What is SRP?" — Answer: each class should have one reason to change — one stakeholder concern. Give the God class example and show how splitting improves maintainability.\n\nQ: "Does SRP mean one method per class?" — Answer: No. Cohesive related behavior belongs together. `PdfExporter` may have `addPage()`, `addHeader()`, `save()` — all one responsibility: PDF generation.\n\nQ: "What violates SRP in this code?" — Answer: identify mixed concerns (persistence + validation + formatting in one class), name the actors who would request changes, and propose extracted classes.',
     codePython: `# Violation — two reasons to change: reporting + persistence
 class Employee:
     def calculate_pay(self) -> float:
@@ -48,18 +48,19 @@ class EmployeeRepository {
     }
 }`,
     interviewTips: [
-      'One class = one reason to change, tied to one actor/stakeholder (Robert Martin\'s formulation).',
-      'Not "one method only" — cohesive related behavior sharing one change driver belongs together.',
-      'God classes (UserManager doing auth + CRUD + email) are the classic violation — proactively split them.',
-      'SRP enables smaller units that are easier to test, review, and reuse across features.',
-      'Apply at module level too: a reporting package should not own payment capture logic.',
-      'Watch for Feature Envy — methods that mostly use another class\'s data signal misplaced responsibility.',
-      'Pitfall: splitting into dozens of one-liner classes creates navigation overhead without real separation of concerns.',
+      'One class = one reason to change (one actor/stakeholder concern).',
+      'Not "one method only" — cohesive related behavior can live together.',
+      'God classes (UserManager doing auth + CRUD + email) are classic violations.',
+      'SRP enables smaller units that are easier to test, review, and reuse.',
+      'At service level: OrderService should not format PDF invoices — delegate to InvoiceRenderer.',
+      'Over-splitting creates shotgun surgery — balance cohesion with separation.',
+      'Ask "who would request a change?" — if multiple departments, split.',
     ],
     commonMistakes: [
-      'Interpreting SRP as literally one public method per class.',
-      'Separating read and write into different classes when they share identical change drivers and invariants.',
-      'Ignoring SRP at service boundaries — microservices that do "everything for User" recreate monolith problems.',
+      'Splitting every method into its own class — creates fragmentation without benefit.',
+      'Confusing SRP with "a class should do one thing" without naming the stakeholder.',
+      'Leaving formatting, validation, and DB access in a single controller.',
+      'Applying SRP only to classes but ignoring fat methods with mixed logic.',
     ],
   },
   {
@@ -67,13 +68,13 @@ class EmployeeRepository {
     title: 'Open/Closed Principle',
     description: 'Open for extension, closed for modification.',
     definition:
-      'The Open/Closed Principle (OCP) says software entities should be open for extension but closed for modification — you add new behavior by introducing new code (classes, plugins, strategies) rather than editing existing, tested production code. Stable abstractions define extension points; concrete variants plug in without changing the core module. This reduces regression risk as requirements grow: adding CryptoPayment should mean a new CryptoPaymentProcessor class, not a modified switch in CheckoutService. OCP does not forbid bug fixes inside existing classes — it targets behavioral extension. Achieving OCP typically requires upfront abstraction (interfaces, abstract base classes, registries), which must be balanced against YAGNI when only one variant exists today.',
+      'OCP says you should add new behavior by extending the system (new classes, strategies, plugins) rather than editing existing, tested code. Stable abstractions define extension points; concrete variants plug in without modifying the core. This reduces regression risk as requirements grow — the checkout flow should not need changes when you add cryptocurrency payments. OCP does not mean never modifying any file — bug fixes and internal refactors are fine. It targets behavioral extension. Achieving OCP usually requires abstractions (interfaces, abstract classes) upfront, which trades initial complexity for long-term flexibility. It pairs directly with Strategy, Factory, and Template Method patterns.',
     analogy:
-      'USB-C ports on a laptop illustrate OCP: manufacturers ship keyboards, drives, and docks that extend functionality without redesigning the motherboard for each device. The port is the stable abstraction; each peripheral is an extension. You do not solder a new circuit every time you plug in a mouse — you extend through the standard interface.',
+      'USB ports: manufacturers add new devices (keyboards, drives, microphones) without redesigning the laptop motherboard each time. The port is the stable interface; devices are extensions. The laptop is closed for modification (you do not solder new circuits) but open for extension (plug in new peripherals).',
     detailedExample:
-      'In a checkout system, Checkout.total(price, discount) delegates to Discount.apply() instead of if discountType == "STUDENT": .... Adding SeniorDiscount, EmployeeDiscount, or PromoCodeDiscount means new Discount implementations registered in a factory or DI container — Checkout remains unchanged and its unit tests stay green. The same approach applies to export formats (PdfExporter, CsvExporter), pricing rules, and notification channels.',
+      'In a tax calculation system, `TaxStrategy` interface with `calculate(amount)`. Implement `UsTax`, `EuTax`, `GstTax`. `InvoiceService` accepts any `TaxStrategy` — adding Japan consumption tax means adding `JapanTax` class, zero edits to `InvoiceService`. Contrast with a switch on country code inside `InvoiceService` — every new country modifies tested code (OCP violation).',
     whenAsked:
-      'Q1: "How would you add a new payment method without changing existing code?" — Introduce PaymentProcessor interface, implement new class, wire via DI/factory; Checkout depends on abstraction. Q2: "Does OCP apply to every change?" — No; bug fixes and internal refactors modify existing code. OCP targets new behavioral variants. Q3: "OCP vs YAGNI?" — Start concrete when one variant exists; extract abstraction when the second variant arrives or when extension frequency is predictable.',
+      'Q: "How would you add a new payment method without changing existing code?" — Answer: define `PaymentMethod` interface, inject implementation. New method = new class implementing interface. Checkout depends on abstraction.\n\nQ: "Does OCP mean you never edit files?" — Answer: No. Fix bugs, improve internals. OCP means new features extend via new types, not by growing if/else chains in stable modules.\n\nQ: "When is OCP over-engineering?" — Answer: when you have one variant and no foreseeable extension. Start simple; introduce abstraction when second variant appears (rule of three).',
     codePython: `from abc import ABC, abstractmethod
 
 class Discount(ABC):
@@ -116,18 +117,19 @@ class Checkout {
     }
 }`,
     interviewTips: [
-      'Extend via new implementations, not by editing growing switch/if-else chains on type enums.',
-      'Strategy, Template Method, Factory, and Plugin/registry patterns are OCP enablers — name them explicitly.',
-      'Requires abstractions upfront — balance with YAGNI; refactor to OCP when second variant appears.',
-      'Bug fixes inside a class are fine; OCP targets adding new behavior without touching stable core logic.',
-      'Registries (Map<String, Handler>) decouple discovery from core processing loops.',
-      'Contrast with violation: checkout switch on paymentType that grows every sprint — maintenance nightmare.',
-      'Pitfall: abstracting every line of code "for OCP" before requirements exist — over-engineering.',
+      'Extend via new implementations, not by editing switch statements in core logic.',
+      'Strategy, Template Method, and Factory patterns are OCP enablers — name them.',
+      'Requires abstractions upfront — balance with YAGNI and rule of three.',
+      'Changing a bug fix inside a class is fine; OCP targets behavioral extension.',
+      'Show before (switch on type) and after (polymorphic strategy) in interviews.',
+      'Plugin architectures and handler registries are OCP at system scale.',
+      'OCP + DIP together: depend on abstraction, extend with new implementations.',
     ],
     commonMistakes: [
-      'Adding another elif branch while claiming to follow OCP — modification is not extension.',
-      'Creating interfaces with only one implementation and no foreseeable second variant (premature abstraction).',
-      'Forgetting to register new implementations in factory/DI config — extension class exists but is never wired.',
+      'Creating interfaces for every class when only one implementation exists.',
+      'Adding a new if-branch and claiming OCP compliance.',
+      'Modifying shared enums for every new variant — enums are often OCP violations.',
+      'Confusing "closed for modification" with "never touch the file again."',
     ],
   },
   {
@@ -136,13 +138,13 @@ class Checkout {
     description:
       'Subtypes must be substitutable for their base types without breaking correctness.',
     definition:
-      'The Liskov Substitution Principle (LSP), named after Barbara Liskov, requires that if S is a subtype of T, objects of type S must be usable anywhere objects of type T are expected without altering the correctness of the program. Subclasses must honor the parent\'s contract: preconditions cannot be strengthened, postconditions cannot be weakened, and invariants of the parent must remain true. Subtypes should not throw unexpected exceptions, return null where the parent never did, or override methods to no-op when callers expect real work. LSP is what makes IS-A inheritance and runtime polymorphism trustworthy — without it, callers need defensive instanceof checks that defeat the purpose of polymorphism. Violations often reveal a modeling error: the inheritance hierarchy does not reflect true substitutability.',
+      'LSP requires that if S is a subtype of T, anywhere you use T you can substitute S without the program knowing or breaking. Subclasses must honor the parent\'s contract: preconditions cannot be strengthened, postconditions cannot be weakened, and invariants must hold. No surprising exceptions, no-ops, or narrowed behavior. Violations often appear as broken IS-A hierarchies where the subtype is not truly a specialized form of the parent. LSP connects inheritance to safe polymorphism — without it, runtime dispatch is unreliable. Barbara Liskov formalized this in 1987; the Square/Rectangle problem is the canonical interview example.',
     analogy:
-      'A trained substitute teacher must deliver the same syllabus, assign homework on schedule, and grade by the rubric students expect from the regular teacher. If the substitute refuses to teach math because they "only do science," or changes grading rules mid-semester, the substitution contract is broken — students and administrators cannot rely on the role swap anymore.',
+      'Substituting a trained substitute teacher for the regular teacher: students expect the same syllabus, homework policies, and grading rules. If the substitute refuses to teach math because they "only do science," or changes the grading scale mid-semester, the substitution contract is broken — even though both are "teachers."',
     detailedExample:
-      'In a graphics library, Rectangle has setWidth, setHeight, and area(). A function doubleWidth(rect: Rectangle) doubles width and expects area to double accordingly. Square extends Rectangle and forces width == height on every setter — doubleWidth breaks because area quadruples instead of doubling. Fix: separate Square and Rectangle types, or model Shape with read-only dimensions, or use composition — never inherit Square from mutable Rectangle.',
+      'In a file storage system, `ReadOnlyFile` should not extend `File` if it overrides `write()` to throw `UnsupportedOperationException`. Code expecting `File` will break when given `ReadOnlyFile`. Instead, model `Readable` and `Writable` interfaces; `File` implements both, `ReadOnlyFile` implements only `Readable`. Callers depending on `Writable` never receive a read-only object.',
     whenAsked:
-      'Q1: "Is Square extends Rectangle valid?" — No; Square violates Rectangle\'s independent width/height contract. Walk through doubleWidth and show broken area. Q2: "How do you detect LSP violations?" — Subclass overrides that throw UnsupportedOperationException, empty overrides, tightened preconditions, or callers that must check concrete type before calling. Q3: "LSP vs duck typing?" — Duck typing allows structural compatibility; LSP still demands behavioral compatibility wherever a declared supertype is expected.',
+      'Q: "Is Square a Rectangle?" — Answer: mathematically yes, in OOP with setters for width/height independently, no. Square violates Rectangle\'s contract — substituting Square where Rectangle is expected breaks `doubleWidth()` logic. Use separate types or a Shape interface.\n\nQ: "How do you detect LSP violations?" — Answer: subclass throws where parent does not, returns null unexpectedly, strengthens preconditions (requires more), or weakens postconditions (guarantees less).\n\nQ: "How does LSP relate to inheritance?" — Answer: inheritance is only valid when LSP holds. IS-A without substitutability is a modeling error.',
     codePython: `class Rectangle:
     def __init__(self, width: float, height: float) -> None:
         self.width = width
@@ -200,18 +202,19 @@ class Geometry {
     }
 }`,
     interviewTips: [
-      'If a subclass breaks callers expecting parent behavior, LSP is violated — inheritance was the wrong tool.',
-      'Square/Rectangle is the canonical anti-example — volunteer it when discussing IS-A or polymorphism.',
-      'Prefer composition or separate types when dimensions/behavior diverge in ways callers cannot ignore.',
-      'LSP connects IS-A inheritance to safe polymorphism — it is the behavioral half of the IS-A claim.',
-      'Watch for overrides that throw NotImplementedException or silently ignore calls — red flags.',
-      'Design by contract: document pre/postconditions; subclasses must preserve them.',
-      'Pitfall: assuming structural similarity (both have width/height) implies valid IS-A substitutability.',
+      'If subclass breaks callers expecting parent behavior, LSP is violated.',
+      'Square/Rectangle is the canonical anti-example — mention it before the interviewer asks.',
+      'Prefer composition or separate types when behavior diverges significantly.',
+      'LSP connects IS-A inheritance to safe polymorphism — they are inseparable.',
+      'Check: does override throw UnsupportedOperationException? Likely LSP violation.',
+      'Design by contract: preconditions, postconditions, invariants must be compatible.',
+      'Fix violations by splitting interfaces (ISP) rather than forcing broken hierarchies.',
     ],
     commonMistakes: [
-      'Inheriting solely to reuse code when the subtype cannot honor all parent method semantics.',
-      'Overriding parent methods to throw "not supported" for subclass instances used polymorphically.',
-      'Weakening guarantees (e.g., parent promises non-null, subclass returns null) without updating callers.',
+      'Defending Square extends Rectangle with "it works for our use case."',
+      'Using inheritance for shared code when LSP does not hold.',
+      'Overriding parent methods to do nothing — silent contract breakage.',
+      'Ignoring that LSP applies to interface implementations, not just class inheritance.',
     ],
   },
   {
@@ -220,13 +223,13 @@ class Geometry {
     description:
       'Clients should not depend on methods they do not use; prefer small, focused interfaces.',
     definition:
-      'The Interface Segregation Principle (ISP) states that no client should be forced to depend on methods it does not use — prefer many small, role-specific interfaces over one large "fat" interface. When Robot implements Worker with work(), eat(), and sleep(), Robot must stub eat() and sleep() with empty bodies or exceptions. Splitting into Workable, Eatable, and Sleepable lets Human implement all three while Robot implements only Workable. ISP reduces coupling because clients see only the capabilities they need, which simplifies mocking in tests and prevents accidental calls to irrelevant operations. It complements SRP at the interface level: interfaces themselves should represent one cohesive role. ISP also applies to API design — expose focused endpoints rather than one mega-service contract.',
+      'ISP splits fat interfaces into role-specific ones so implementers are not forced to provide empty, throwing, or meaningless stub methods. Clients depend only on the capabilities they need, which keeps coupling low and makes mock implementations trivial in tests. A `Worker` interface with `work()`, `eat()`, and `sleep()` forces `Robot` to implement `eat()` — absurd. Segregated `Workable` and `Eatable` interfaces let each type implement only what applies. ISP applies beyond classes: REST APIs with bloated endpoints, fat DTOs, and god-service interfaces all benefit from segregation. It works hand-in-hand with DIP — inject the smallest interface slice the client needs.',
     analogy:
-      'A smart TV remote with only power, volume, and input-select buttons beats a universal remote with 200 buttons where half do nothing on your device. The slim remote segregates controls to what your TV actually supports — you are never forced to ignore or accidentally press irrelevant buttons. Segregated interfaces are that slim remote for your code.',
+      'A smart TV remote with only power, volume, and input buttons vs a universal remote with 200 buttons where half do nothing on your device. The slim remote (segregated interface) is easier to use and does not expose irrelevant actions. You should not need a PhD to change the channel.',
     detailedExample:
-      'In a document processing system, replace PrintableScannerFaxMachine with separate Printable, Scannable, and Faxable interfaces. BasicPrinter implements Printable; AllInOneDevice implements all three; EmailSender implements neither print nor scan. DocumentService depends on Printable when generating PDFs — it never sees fax methods. Adding cloud upload means a new CloudUploadable interface without bloating printer contracts.',
+      'In a printer/scanner/fax multifunction device, avoid one `IMachine` with `print()`, `scan()`, `fax()`. A basic printer should not stub `scan()`. Define `Printer`, `Scanner`, `Fax` interfaces. `SimplePrinter implements Printer` only. `AllInOneDevice implements Printer, Scanner, Fax`. Client code depending on `Printer` never sees unused scan methods — tests mock only `Printer`.',
     whenAsked:
-      'Q1: "Show an ISP violation." — Fat Worker interface with eat()/sleep() forced on Robot; split into role interfaces. Q2: "Interface vs abstract class for ISP?" — Interfaces segregate capabilities cleanly; abstract classes carry shared state but can still be split into multiple interfaces implemented by one class. Q3: "How does ISP relate to REST APIs?" — Clients consume focused resources (/orders, /payments) instead of one god endpoint with dozens of unrelated operations.',
+      'Q: "Show an ISP violation" — Answer: fat `Worker` interface applied to `Robot` that must stub `eat()`. Fix: split into `Workable`, `Eatable`; Human implements both, Robot implements `Workable`.\n\nQ: "How small should interfaces be?" — Answer: one cohesive role or capability. `Serializable`, `Comparable`, `Runnable` are good examples. Avoid one-method-per-interface absurdity unless the role is truly distinct.\n\nQ: "ISP vs SRP — what is the difference?" — Answer: SRP is about class responsibilities; ISP is about interface surface area clients must depend on. Fat interface can force classes to mix concerns.',
     codePython: `from abc import ABC, abstractmethod
 
 class Workable(ABC):
@@ -278,18 +281,19 @@ class Robot implements Workable {
     // no forced eat() stub
 }`,
     interviewTips: [
-      'Many small, role-specific interfaces beat one god interface that forces dummy implementations.',
-      'Fat interfaces with unrelated methods signal ISP violation — split by client use case or actor role.',
-      'Role interfaces (Printable, Serializable, Closeable) are textbook examples interviewers recognize.',
-      'Works with DI: inject Workable to a task runner, not WorkerWithHumanNeeds when the client is a factory bot.',
-      'ISP + SRP: class has one responsibility; interface exposes one role to its clients.',
-      'In Java, default methods on interfaces can share code without forcing unrelated implementers.',
-      'Pitfall: splitting interfaces so finely that wiring and discovery become harder than the problem warrants.',
+      'Many small interfaces beat one "god interface" with unrelated methods.',
+      'Fat interfaces force dummy implementations — classic interview code smell.',
+      'Role interfaces (Printable, Serializable, Closeable) are textbook examples.',
+      'Works with DI: inject only the interface slice the client needs.',
+      'Adapter pattern can wrap a fat legacy interface behind slim client-facing ones.',
+      'REST: prefer focused endpoints over one mega `/api/doEverything` resource.',
+      'ISP + LSP: segregate rather than inherit broken behavior.',
     ],
     commonMistakes: [
-      'One interface per class by reflex even when clients genuinely need the full surface area.',
-      'Leaving fat interfaces and using adapter classes everywhere instead of fixing the root contract.',
-      'Segregating interfaces but injecting the fat super-interface type in constructors anyway.',
+      'Splitting interfaces so finely that wiring and discovery become painful.',
+      'Creating ISP-compliant interfaces but injecting the fat parent type anyway.',
+      'Stub methods that throw UnsupportedOperationException instead of segregating.',
+      'Confusing ISP with "one method per interface" — role cohesion matters.',
     ],
   },
   {
@@ -298,13 +302,13 @@ class Robot implements Workable {
     description:
       'High-level modules should depend on abstractions, not concrete implementations.',
     definition:
-      'The Dependency Inversion Principle (DIP) states that high-level modules should not depend on low-level modules — both should depend on abstractions. Business policy (OrderService, pricing rules, workflow orchestration) defines the interfaces it needs; infrastructure (PostgresOrderRepository, SmtpEmailSender, S3FileStore) implements those interfaces. Dependency direction points inward toward domain logic, not outward toward frameworks and databases. This inversion is the foundation of hexagonal/ports-and-adapters architecture and clean architecture layering. DIP enables unit testing without real databases or network calls by injecting in-memory fakes. Note: DIP is about dependency direction and abstractions; Dependency Injection (DI) is the technique for supplying implementations at runtime — related but not identical.',
+      'DIP inverts the typical dependency direction: business logic (high-level) defines interfaces it needs, and low-level details (database, email, file system) implement them. Both layers depend on abstractions, not on each other directly. Without DIP, `OrderService` imports `PostgresOrderRepository` and becomes untestable without a real database. With DIP, `OrderService` depends on `OrderRepository` interface; Postgres and in-memory implementations are interchangeable. This is the foundation of testable, swappable infrastructure in LLD. Note: DIP (principle) is not the same as DI (dependency injection technique), but DI is how you apply DIP at runtime.',
     analogy:
-      'Electrical wall outlets standardize 120V/240V socket specs so your lamp depends on the outlet standard, not on a specific power plant or generator type. The utility company implements the standard behind the wall; you plug in without knowing whether electricity comes from coal, solar, or hydro. Swapping the backend power source does not require rewiring your lamp.',
+      'A wall outlet standard: your lamp depends on the 120V/230V socket specification, not on a specific power plant or generator type. The utility implements the standard behind the wall; you plug in without caring whether electricity comes from solar, coal, or hydro. The abstraction (outlet spec) decouples appliance from generation.',
     detailedExample:
-      'OrderService (high-level) depends on OrderRepository interface defined alongside domain models. PostgresOrderRepository, MongoOrderRepository, and InMemoryOrderRepository implement save(order) differently. Production wiring injects Postgres; tests inject InMemory. Adding Redis cache means a new CachedOrderRepository decorator implementing the same interface — OrderService never imports JDBC or Redis SDK types.',
+      'In a logging framework, `ApplicationService` depends on `Logger` interface with `info()` and `error()`. `FileLogger`, `CloudWatchLogger`, and `NoOpLogger` implement it. Production wires `CloudWatchLogger`; unit tests inject `NoOpLogger` or a capturing fake. `ApplicationService` never imports AWS SDK — high-level policy inverted from low-level detail.',
     whenAsked:
-      'Q1: "How do you test without a real database?" — OrderService accepts OrderRepository interface; tests pass InMemoryOrderRepository. DIP makes swapping trivial. Q2: "DIP vs Dependency Injection?" — DIP is the design rule (depend on abstractions); DI is the mechanism (constructor/setter injection, IoC container) to provide concrete instances. Q3: "Where should interfaces live?" — With the consumer (application/domain layer) as "ports," or in a shared domain module — not buried inside infrastructure packages where high-level code must import low-level packages.',
+      'Q: "How do you test without a real database?" — Answer: DIP — `Service` depends on `Repository` interface; tests inject `InMemoryRepository`. No Postgres required.\n\nQ: "What is the difference between DIP and DI?" — Answer: DIP is the principle (depend on abstractions); DI is the technique (constructor injection, IoC container) to supply implementations. DI implements DIP.\n\nQ: "Who owns the interface — consumer or implementer?" — Answer: ideally the consumer (high-level module defines the port it needs). Hexagonal architecture calls these ports (defined by app) and adapters (infra implements).',
     codePython: `from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
@@ -358,18 +362,19 @@ class OrderService {
 // Tests inject InMemoryOrderRepository — no Postgres needed
 new OrderService(new PostgresOrderRepository());`,
     interviewTips: [
-      'High-level policy must not import low-level details (JDBC, HTTP clients) directly — both depend on abstractions.',
-      'Abstractions belong with the consumer (port) or shared domain — infrastructure implements them (adapter).',
-      'Dependency Injection is how you wire concrete implementations at runtime; DIP is why you do it.',
-      'Constructor injection makes dependencies explicit and supports immutable, testable services.',
-      'DIP + interfaces = easy unit tests with mocks, fakes, and in-memory implementations.',
-      'Contrast violation: new PostgresOrderRepository() inside OrderService constructor — untestable, tightly coupled.',
-      'Pitfall: creating interfaces for every class regardless of variation need — apply DIP where swap/test value exists.',
+      'High-level policy should not import low-level details directly.',
+      'Abstractions belong with the consumer (port) or shared domain module.',
+      'Dependency Injection (constructor injection) is how you wire implementations at runtime.',
+      'DIP + interfaces = easy unit tests with mocks, fakes, and stubs.',
+      'Factory or IoC container resolves concrete types at composition root.',
+      'Contrast with naive design: Service → new PostgresRepo() inside constructor (DIP violation).',
+      'Hexagonal/ports-and-adapters architecture is DIP at system scale.',
     ],
     commonMistakes: [
-      'Confusing DIP with "use a DI framework" — Spring/Guice help, but the principle is about dependency direction.',
-      'Putting repository interfaces in the infrastructure package, forcing domain to depend on infra layer.',
-      'Injecting concrete classes because "we only have one implementation" — blocks testing and future swaps.',
+      'Instantiating concrete dependencies inside the class (`new PostgresRepo()`).',
+      'Putting interfaces in the infrastructure package instead of domain/application layer.',
+      'Confusing DIP with "inject everything" — only invert boundaries that vary or need testing.',
+      'Creating an interface per class without a swappable or testable motivation.',
     ],
   },
 ];

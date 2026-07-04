@@ -9,13 +9,13 @@ export const relationships: Relationship[] = [
     description:
       'A strict parent-child relationship where a subclass permanently copies the structure and behavior of a superclass.',
     definition:
-      'Inheritance expresses a taxonomic IS-A relationship: Dog IS-A Animal, SavingsAccount IS-A BankAccount, PremiumUser IS-A User. The subclass inherits attributes and methods from the superclass and may override or extend them while retaining substitutability wherever the parent type is expected. In UML class diagrams, inheritance is drawn as a solid line with a hollow triangle arrowhead pointing to the parent. It is the strongest structural relationship between classes because the subtype is a specialized form of the supertype, not merely a collaborator. Because inheritance couples subclasses to parent implementation details, it should be reserved for genuine specialization — not convenience reuse. When substitutability fails (Square pretending to be Rectangle), the relationship is modeled incorrectly and polymorphism will break at runtime.',
+      'Inheritance expresses taxonomy: Dog IS-A Animal, SavingsAccount IS-A BankAccount. The subclass inherits attributes and methods from the superclass and may override or extend them. UML shows this with a hollow triangle arrow pointing to the parent. It is the strongest form of type relationship because the subtype is a specialized version of the supertype and should be substitutable wherever the parent is expected. Inheritance couples the child to the parent\'s structure — changes to the parent ripple to all descendants. Use it when the IS-A relationship is permanent, meaningful, and passes the Liskov Substitution test. In LLD interviews, inheritance often appears alongside interfaces: class inheritance for shared implementation, interface implementation for shared contracts.',
     analogy:
-      'Biological classification works as IS-A: every Golden Retriever is a Dog, and every Dog is a Mammal. You would never say "a Dog has a Mammal" — the Golden Retriever fully is those types, inheriting general mammal traits (warm-blooded, vertebrate) while adding breed-specific behavior. If you tried to treat a fish as a mammal because both are animals, the classification breaks — same as forcing a wrong IS-A in code.',
+      'Biological classification: every Golden Retriever IS-A Dog, every Dog IS-A Mammal, every Mammal IS-A Animal. You do not say "a Dog has a Mammal" — the subtype fully is that type, with specialized behavior layered on top. A vet treating an Animal can examine a Golden Retriever without changing procedure, because the IS-A chain guarantees shared anatomy and physiology expectations.',
     detailedExample:
-      'In a ride-sharing app, Vehicle defines move() and getCapacity(). Car, Bike, and Truck each extend Vehicle with specialized move() behavior and capacity rules. TripAssignmentService accepts Vehicle and calls move() without knowing the concrete type — valid because Car IS-A Vehicle. If Helicopter needed fly() but not all vehicles fly, do not cram fly() into Vehicle; use a CanFly interface instead to avoid polluting the base class.',
+      'In a payment system, `CreditCardPayment extends Payment` and `UpiPayment extends Payment`. Both inherit `amount`, `timestamp`, and `validate()` from `Payment`, then specialize `process()` with card-network vs UPI logic. `PaymentProcessor` accepts `Payment` and calls `process()` polymorphically — any new payment type extends `Payment` without changing the processor. If `Refund` cannot substitute for `Payment` (different contract), do not force it into the hierarchy — use a separate type or interface.',
     whenAsked:
-      'Q1: "Label IS-A vs HAS-A on this diagram." — Look for hollow triangle arrows (inheritance) vs lines/diamonds (association/aggregation/composition). IS-A means substitutability: child can stand in for parent. Q2: "Can Square inherit from Rectangle?" — No; Square violates Rectangle\'s independent width/height contract (LSP). Model them as separate types or use composition. Q3: "When does interface implementation replace class inheritance?" — When you need multiple capabilities (Serializable, Comparable), when implementations share no code, or when you want to avoid fragile base classes.',
+      'Q: "How do you decide between IS-A and HAS-A?" — Answer: IS-A when the subtype is a specialized kind of the parent and can replace it (Car IS-A Vehicle). HAS-A when one object contains or uses another (Car HAS-A Engine). Draw the sentence test: "A Car is an Engine" fails → HAS-A.\n\nQ: "Can a Square inherit from Rectangle?" — Answer: No — violates LSP because setting width independently breaks Square invariants. Model them as siblings implementing a `Shape` interface or use composition.\n\nQ: "Class inheritance vs interface implementation?" — Answer: inheritance (extends) for shared code and single parent; interface (implements) for capability contracts with multiple inheritance. Prefer interfaces for LLD flexibility.',
     codePython: `class Vehicle:
     def move(self) -> None:
         print("Moving")
@@ -49,18 +49,19 @@ class Navigation {
 
 Navigation.navigate(new Car());`,
     interviewTips: [
-      'IS-A = inheritance or interface implementation where the subtype is substitutable for the supertype.',
-      'UML: hollow triangle on the parent side; arrow from subclass to superclass.',
-      'Square/Rectangle is the go-to LSP trap — mention it before the interviewer does.',
-      'Prefer interfaces for cross-cutting capabilities (Flyable, Payable) over bloated base classes.',
-      'Multiple inheritance of classes is limited (Java: single class, multiple interfaces; Python: MRO complexity).',
-      'Distinguish IS-A (type taxonomy) from HAS-A (ownership) — mixing them in one hierarchy causes design rot.',
-      'Pitfall: using inheritance only to reuse a helper method — extract a utility or compose instead.',
+      'IS-A = inheritance or interface implementation with substitutability (LSP).',
+      'UML arrow: solid line with hollow triangle on the parent (superclass) side.',
+      'Violating LSP (Square extends Rectangle) means wrong IS-A modeling — say this proactively.',
+      'Prefer interfaces for capabilities ("Flyable", "Payable") over deep class hierarchies.',
+      'Single inheritance of classes (Java) vs multiple interface implementation — know the language rules.',
+      'Abstract base classes sit between interface and concrete — shared code plus partial contract.',
+      'Favor composition when behavior combinations multiply (e.g., FlyingCar needs Flyable + Drivable).',
     ],
     commonMistakes: [
-      'Declaring IS-A when behavior diverges enough that callers need instanceof checks on the subtype.',
-      'Putting shared fields in a base class that only some subclasses need, forcing empty overrides elsewhere.',
-      'Confusing implements (contract IS-A capability) with extends (implementation IS-A type) in discussion.',
+      'Labeling every "uses" relationship as IS-A because one class references another.',
+      'Creating inheritance for convenience when interface + delegation is cleaner.',
+      'Ignoring LSP violations in the hierarchy and patching with instanceof checks.',
+      'Confusing inheritance (IS-A) with the OOP pillar "Inheritance" — same word, context matters.',
     ],
   },
   {
@@ -69,13 +70,13 @@ Navigation.navigate(new Car());`,
     description:
       'A loose relationship where two completely independent objects interact with each other without any ownership.',
     definition:
-      'Association is a structural relationship where two classes are connected because objects of one type interact with objects of another, but neither owns the other\'s lifecycle. The link can be unidirectional (Doctor consults Patient) or bidirectional (Student enrolls in Course, Course lists Students). Multiplicity annotates how many instances participate: one-to-one, one-to-many, or many-to-many. Association is weaker than aggregation and composition — objects exist independently before, during, and after the interaction. In code, association often appears as a method parameter, a short-lived reference, or a field without create/destroy responsibility. It is the default way to model collaborations in LLD when ownership is not part of the story.',
+      'Association means objects know about each other and collaborate, but neither owns the other\'s lifecycle. It is the weakest structural link — often a reference passed as a method parameter or stored as a field without creation or destruction responsibility. Multiplicity can be one-to-one, one-to-many, or many-to-many (e.g., a Student enrolls in many Courses, a Course has many Students). Association appears constantly in LLD: a Service uses a Repository, a Controller uses a Service. The objects exist independently before and after the interaction. In UML, association is a simple line between classes, optionally labeled with role names and multiplicity. It differs subtly from dependency (see below) in duration — association implies a longer-lived link.',
     analogy:
-      'A customer hailing a cab illustrates association: both exist independently before the ride. The customer uses the cab for a trip; when the ride ends, both continue existing — destroying the customer object would not automatically destroy the cab, and vice versa. Neither party exclusively owns the other; they simply collaborate for a period of time.',
+      'A customer hailing a cab: both exist independently before and after the ride. The customer does not own the cab company\'s vehicles, and the driver does not own the passenger. They collaborate for a transaction — the ride — then go their separate ways. Either can continue to exist if the other disappears.',
     detailedExample:
-      'In a hospital system, Doctor.consult(patient) takes a Patient reference for the duration of the appointment. Doctors and patients are created and managed separately; ending a consultation does not delete either entity. For many-to-many (Students and Courses), introduce an Enrollment association class holding studentId, courseId, and semesterGrade — avoid embedding unbounded lists without a clear ownership model.',
+      'In a library system, `Librarian` associates with `Book` during `checkout(member, book)`. The librarian does not create or destroy books — they interact with existing instances. `Member` and `Book` also associate during checkout without ownership. A `CatalogService` holds references to many `Book` objects but does not own their lifecycle (books persist in the database regardless). Many-to-many enrollment between `Student` and `Course` is modeled with a join entity `Enrollment`.',
     whenAsked:
-      'Q1: "How does Doctor relate to Patient?" — Association (USES-A): Doctor interacts with Patient during consult; no ownership of lifecycle. Q2: "Association vs dependency?" — Dependency is often a transient use (local variable, parameter in one method); association implies a longer-lasting link (field reference). Interviews frequently treat them as similar — emphasize duration and structural vs transient. Q3: "How do you model many-to-many?" — Join entity (Enrollment, OrderItem) or association class with its own attributes.',
+      'Q: "What is the difference between association and dependency?" — Answer: dependency is a temporary "uses" in a method signature (local variable, parameter); association is a longer-lived field reference. In practice, interviews often accept overlap — emphasize no ownership in either case.\n\nQ: "How do you model many-to-many?" — Answer: introduce an association class or join entity (`Enrollment` linking `Student` and `Course`) rather than embedding lists in both sides without structure.\n\nQ: "Doctor and Patient — what relationship?" — Answer: association (USES-A). Doctor examines patients; neither owns the other. If Patient records belong exclusively to a Hospital, that is a different relationship (aggregation/composition with Hospital).',
     codePython: `class Patient:
     def __init__(self, name: str) -> None:
         self.name = name
@@ -109,18 +110,19 @@ Doctor dr = new Doctor();
 Patient alice = new Patient("Alice");
 dr.consult(alice); // uses Patient — no ownership`,
     interviewTips: [
-      'USES-A / knows-about — weakest structural link; no lifecycle control by either side.',
-      'UML: simple line between classes; add role names (consultant, patient) and multiplicity (1..*, 0..1).',
-      'Bidirectional associations increase coupling — prefer unidirectional navigation when possible.',
-      'Many-to-many almost always needs an association/join class with its own identity and attributes.',
-      'Do not confuse association with dependency dashed arrows — both mean "uses," but association is structural.',
-      'Compare to aggregation: association has no whole-part semantics; aggregation implies grouping.',
-      'Pitfall: modeling every method parameter as a permanent association field — keep references only where needed.',
+      'USES-A / knows-about — weakest link; no lifecycle control by either party.',
+      'UML: simple line between classes; add role labels ("enrolledIn") and multiplicity ("1..*").',
+      'Differs from dependency only in duration — field reference vs method-local use.',
+      'Many-to-many associations usually become a separate association class or join table.',
+      'Bidirectional associations require careful design — prefer unidirectional when possible.',
+      'Association is the default relationship — most collaborations are not ownership.',
+      'In code, a field holding an injected reference often signals association or aggregation.',
     ],
     commonMistakes: [
-      'Using association arrows when composition or aggregation better captures whole-part semantics.',
-      'Storing bidirectional references without clear ownership, causing memory leaks or inconsistent state.',
-      'Omitting multiplicity on diagrams when the cardinality constraint matters for database or API design.',
+      'Calling every field reference "composition" — ownership must be exclusive and lifecycle-bound.',
+      'Modeling bidirectional associations without synchronization logic when objects update each other.',
+      'Embedding many-to-many as unbounded lists in both classes without a join entity.',
+      'Confusing association with inheritance — "Doctor IS-A Person" is different from "Doctor uses Patient."',
     ],
   },
   {
@@ -129,13 +131,13 @@ dr.consult(alice); // uses Patient — no ownership`,
     description:
       'A weak whole-part relationship where a container references external objects that survive even if the container is destroyed.',
     definition:
-      'Aggregation is a specialized HAS-A relationship where a whole groups parts, but parts have independent lifecycles and can exist outside the whole. The container typically receives part references from outside (constructor or setter injection) rather than creating them exclusively. If the whole is destroyed, parts persist — disbanding a team does not delete the players. UML represents aggregation with a hollow diamond on the whole side connected to the part. Semantically it sits between association and composition: there is a whole-part meaning, but ownership is shared or weak. In practice, the aggregation vs composition distinction is debated — many teams focus on who creates and destroys objects in code rather than diamond shading alone.',
+      'Aggregation is a HAS-A relationship with shared ownership: the whole groups parts, but parts can exist independently and outlive the whole. The container holds references, often injected from outside, rather than creating exclusive lifetime control. Parts may be shared among multiple wholes (one Player on two Team rosters in a tournament). UML uses a hollow diamond on the whole side. In code, aggregation typically appears as constructor injection of pre-built objects — the parent never calls `new` on the child. The distinction from composition is lifecycle: if destroying the parent should not destroy the child, it is aggregation. Interviewers acknowledge the UML distinction is subtle and code looks similar — intent and lifecycle rules differentiate them.',
     analogy:
-      'A university department and its professors: the department organizes professors into a group for administration and budgeting, but professors exist independently — they can transfer departments, retire, or consult elsewhere while the department continues. Dissolving the department does not erase the people; it only dissolves the grouping relationship.',
+      'A university department and professors: the department groups professors for organizational purposes, but a professor can transfer to another department, retire, or consult independently. Dissolving the Computer Science department does not delete the people — they persist and join other departments. The department HAS professors; it does not own their existence.',
     detailedExample:
-      'In a sports league app, Team holds a list of Player objects injected at construction. Players are created by a PlayerRegistry or signed from free agency — Team does not new Player() internally. When Team disbands, Player records remain for stats history and reassignment to new teams. The same Player instance might appear on an All-Star roster (another aggregate) simultaneously — shared references signal aggregation, not composition.',
+      'In a sports league app, `Team` aggregates `Player` objects passed into its constructor. Players are created separately, may be traded between teams, and exist in the player registry after a team disbands. `League` aggregates multiple `Team` objects — shutting down a seasonal league does not delete team franchises or players. Contrast with `Car` composing `Engine` — you do not transplant engines between cars as first-class domain objects.',
     whenAsked:
-      'Q1: "Team and Player — aggregation or composition?" — Aggregation if players exist independently and are injected; composition if Team creates Player internally and players cannot exist without a team. Q2: "Does the UML diamond matter in code?" — What matters is lifecycle: who creates, who destroys, can parts be shared. Hollow vs filled diamond reflects intent; implementation confirms it. Q3: "Aggregation vs association?" — Aggregation adds whole-part grouping semantics; plain association is mere collaboration without "part of" meaning.',
+      'Q: "Team and Player — aggregation or composition?" — Answer: aggregation. Players exist independently, can switch teams, and outlive a disbanded team. If Player were an inner class created only by Team and meaningless alone, that would be composition.\n\nQ: "Does aggregation vs composition matter in code?" — Answer: often the same field reference syntax — the difference is who creates/destroys the child and whether parts are shared. Explain lifecycle intent; interviewers value the reasoning.\n\nQ: "How is aggregation different from association?" — Answer: aggregation implies a whole-part grouping (Team-Player); association is generic collaboration without part-of semantics.',
     codePython: `class Player:
     def __init__(self, name: str) -> None:
         self.name = name
@@ -184,18 +186,19 @@ Team team = new Team(List.of(p1, p2));
 team.setPlayers(List.of()); // team disbanded — players still exist
 System.out.println(p1.getName()); // Alex`,
     interviewTips: [
-      'HAS-A with shared lifecycle — hollow diamond in UML on the whole/container side.',
-      'Whole does not exclusively create or destroy parts; parts may pre-exist the whole.',
-      'Parts can be shared across multiple wholes (same Player on two teams conceptually — rare but valid).',
-      'Constructor injection of pre-built objects is a code smell hinting aggregation.',
-      'If unsure between aggregation and association, ask: is there a meaningful "part of" grouping? If yes, lean aggregation.',
-      'Contrast with composition: if destroying the whole must destroy parts, it is composition.',
-      'Pitfall: debating diamond shading for minutes — steer toward concrete create/destroy responsibilities.',
+      'HAS-A with shared lifecycle — hollow diamond in UML on the whole side.',
+      'Whole does not exclusively create or destroy parts.',
+      'Parts may belong to multiple aggregates simultaneously (shared reference).',
+      'Constructor injection of pre-built objects signals aggregation.',
+      'Weaker than composition — think "groups" not "owns exclusively."',
+      'If unsure in an interview, explain lifecycle: "Players survive team deletion → aggregation."',
+      'Contrast with composition: Car-Engine, Order-OrderLine — parts die with whole.',
     ],
     commonMistakes: [
-      'Labeling every HAS-A relationship aggregation when the part is actually created and owned internally.',
-      'Assuming aggregation implies deep copying — it only describes lifecycle independence, not copy semantics.',
-      'Creating Team internally with new Player() while calling it aggregation — that behavior is composition.',
+      'Labeling every HAS-A as composition because the parent holds a reference.',
+      'Creating children inside the parent constructor but calling it aggregation.',
+      'Ignoring shared ownership — two teams claiming exclusive composition over same Player.',
+      'Over-emphasizing UML diamond shading when code evidence is what interviewers want.',
     ],
   },
   {
@@ -204,13 +207,13 @@ System.out.println(p1.getName()); // Alex`,
     description:
       'A strong whole-part relationship where a container exclusively owns its components, meaning they die if the container is destroyed.',
     definition:
-      'Composition is the strongest whole-part relationship: the parent creates components, controls their entire lifecycle, and parts cannot meaningfully exist without the parent context. When the container is destroyed, its composed parts are destroyed with it — there is no sensible notion of moving a room to another house as an intact entity. UML shows composition with a filled diamond on the whole side. In code, composition appears when the parent instantiates parts in its constructor (or factory method) and does not expose them for external reassignment. This pattern underpins "composition over inheritance" — behavior is delegated to owned components rather than inherited from deep hierarchies. The Composite design pattern (tree structures of part-whole hierarchies) builds directly on composition semantics.',
+      'Composition is strong HAS-A / PART-OF: the parent creates components, controls their lifetime, and they cannot meaningfully exist without the parent. When the container is destroyed, its parts are destroyed with it. Parts are not shared with other parents — an Engine belongs to one Car. UML uses a filled diamond on the whole side. Composition is the preferred way to reuse behavior without inheritance ("composition over inheritance"): delegate to owned components rather than extending a fragile base class. It appears in design patterns like Composite (tree structures), Decorator (wrapper owns wrappee), and typical domain modeling (Order owns OrderLines).',
     analogy:
-      'A house and its rooms demonstrate composition: Room 101 is created as part of a specific house, cannot be relocated intact to another building in this model, and is demolished when the house is torn down. You do not hire a room from a room pool and attach it temporarily — the room\'s identity is tied to the house that owns its lifecycle.',
+      'A house and its rooms: you do not move Room 101 to another house as an intact, independent entity. Rooms are created with the house, cannot exist without a building in this model, and are demolished when the house is torn down. The house exclusively owns the room lifecycle — strong whole-part bond.',
     detailedExample:
-      'In a Car class, Engine is instantiated inside Car\'s constructor as a private final field. External code never receives an Engine reference to reattach elsewhere. When Car is scrapped, the engine goes with it — you do not salvage the engine object in the domain model independently. Similarly, Order composes OrderLineItem objects: canceling/deleting the order removes line items; line items are not shared across orders.',
+      'In an e-commerce system, `Order` composes `OrderLine` items. Lines are created when the order is created (`new OrderLine(product, qty)` inside `Order.addItem()`), cannot belong to two orders, and are deleted when the order is cancelled. `Car` composes `Engine` — the engine is instantiated in the car constructor and is not shared. `TextEditor` composes `SpellChecker` as an internal component rather than inheriting from it.',
     whenAsked:
-      'Q1: "Engine and Car — composition or aggregation?" — Composition: Car creates and owns Engine; engine does not exist as a standalone domain object outside the car. Q2: "Why composition over inheritance?" — Behavior varies by combining components (Engine, GPS, BluetoothModule) instead of subclass explosion (Car, CarWithGPS, CarWithGPSAndBluetooth...). Q3: "How does this relate to the Composite pattern?" — Composite builds tree structures where leaves and composites share an interface; both treat part-whole uniformly (FileSystem folders and files).',
+      'Q: "Engine and Car — composition or aggregation?" — Answer: composition. Engine is created with the car, not shared between cars, and has no independent domain life (in typical modeling). Destroying the car destroys the engine instance.\n\nQ: "What does composition over inheritance mean?" — Answer: prefer owning behavior via fields (`Car` has `Engine`) over extending classes (`SportsCar extends Car extends Vehicle`). Reduces coupling and avoids fragile base classes.\n\nQ: "How does composition relate to the Composite pattern?" — Answer: Composite uses tree composition — Folder contains Files and sub-Folders; child lifecycle tied to parent; uniform `render()` interface.',
     codePython: `class Engine:
     def start(self) -> None:
         print("Engine running")
@@ -245,18 +248,19 @@ Car car = new Car();
 car.start();
 // when car is garbage-collected, engine goes with it`,
     interviewTips: [
-      'PART-OF — filled diamond in UML; strongest whole-part bond with exclusive ownership.',
-      'Child created inside parent constructor; not intended for sharing across multiple parents.',
-      '"Composition over inheritance" — delegate behavior to owned components to avoid fragile hierarchies.',
-      'If the part can outlive or be transferred independently of the whole, it is aggregation, not composition.',
-      'Hide composed objects behind the parent interface — callers interact with Car.start(), not Engine directly.',
-      'Composite pattern: uniform treat of individual objects and compositions (UI widgets, file trees).',
-      'Pitfall: exposing internal components via getters enables external mutation that breaks encapsulation.',
+      'PART-OF — filled diamond in UML; strongest whole-part bond.',
+      'Child created inside parent; not shared with other parents.',
+      '"Composition over inheritance" — delegate behavior to owned components.',
+      'If the part can outlive the whole, it is aggregation, not composition.',
+      'Composite pattern: uniform treatment of leaf and container via composition tree.',
+      'Destructor/cleanup: in languages with manual memory, parent deletes children.',
+      'Test for composition: "Does this object make sense without its parent?" — if no, composition.',
     ],
     commonMistakes: [
-      'Calling it composition while injecting parts from outside and allowing reassignment — that is aggregation.',
-      'Sharing one composed instance across two parents without clear domain rules — usually a design error.',
-      'Using inheritance for every feature variant instead of composing feature objects (Favor composition).',
+      'Using inheritance when a HAS-A component would be simpler (Car extends Engine).',
+      'Sharing composed children between two parents — that is aggregation at best.',
+      'Creating children outside the parent but calling it composition without exclusive ownership.',
+      'Assuming garbage collection means composition does not matter — domain lifecycle still differs.',
     ],
   },
 ];

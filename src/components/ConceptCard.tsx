@@ -1,3 +1,4 @@
+import { CodeTabs } from './CodeTabs';
 import { ReactNode } from 'react';
 
 export interface ConceptCardProps {
@@ -73,16 +74,8 @@ export function ConceptCard({
           <p className="concept-card__text">{whenAsked}</p>
         </ConceptSection>
 
-        <ConceptSection title="Python">
-          <pre className="concept-card__code">
-            <code>{codePython}</code>
-          </pre>
-        </ConceptSection>
-
-        <ConceptSection title="Java">
-          <pre className="concept-card__code">
-            <code>{codeJava}</code>
-          </pre>
+        <ConceptSection title="Code">
+          <CodeTabs python={codePython} java={codeJava} />
         </ConceptSection>
 
         <ConceptSection title="Interview tips">
