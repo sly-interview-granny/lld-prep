@@ -29,8 +29,7 @@ export function useSectionScrollSpy(
 
         if (visible.length === 0) return;
 
-        const id = visible[0].target.id;
-        setActiveSectionId(id);
+        setActiveSectionId(visible[0].target.id);
       },
       { rootMargin: '-15% 0px -55% 0px', threshold: 0 },
     );

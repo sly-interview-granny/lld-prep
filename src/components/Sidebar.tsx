@@ -38,7 +38,7 @@ function SectionNavLink({
       }`}
       onClick={onClose}
     >
-      <span className="sidebar__pattern-name">{item.label}</span>
+      {item.label}
     </NavLink>
   );
 }
