@@ -203,55 +203,11 @@ a:hover {
   font-size: 0.875rem;
 }
 
-.sidebar__progress {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  padding: 0 0.5rem;
-  margin-bottom: 0.75rem;
-}
-
 .sidebar__link--pattern {
   color: var(--text-secondary);
   font-size: 0.8125rem;
   padding: 0.35rem 0.5rem;
   justify-content: flex-start;
-}
-
-.sidebar__pattern-name {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  min-width: 0;
-  line-height: 1.35;
-}
-
-.sidebar__pattern-status {
-  flex-shrink: 0;
-  width: 1rem;
-  height: 1rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.sidebar__pattern-status--visited {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--accent);
-}
-
-.sidebar__pattern-status--unvisited {
-  width: 0.45rem;
-  height: 0.45rem;
-  border-radius: 50%;
-  border: 1.5px solid var(--text-muted);
-  opacity: 0.6;
-}
-
-.sidebar__link--pattern.sidebar__link--active
-  .sidebar__pattern-status--unvisited {
-  border-color: var(--accent);
-  opacity: 1;
 }
 
 .sidebar__group {

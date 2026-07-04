@@ -1,8 +1,6 @@
-import { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { CodeTabs } from '../components/CodeTabs';
 import { getAdjacentPatterns, getPatternBySlug } from '../content/patterns';
-import { useVisitedPatterns } from '../hooks/useVisitedPatterns';
 
 interface ScaffoldSectionProps {
   title: string;
@@ -64,13 +62,6 @@ function InterviewTipsSection({ tips }: InterviewTipsSectionProps) {
 export function PatternDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const pattern = slug ? getPatternBySlug(slug) : undefined;
-  const { markVisited } = useVisitedPatterns();
-
-  useEffect(() => {
-    if (slug && pattern) {
-      markVisited(slug);
-    }
-  }, [slug, pattern, markVisited]);
 
   if (!pattern) {
     return (
