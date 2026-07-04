@@ -7,17 +7,18 @@ export function SolidPage() {
       <header className="page__header">
         <h1 className="page__title">SOLID Principles</h1>
         <p className="page__subtitle">
-          Five principles for writing maintainable, extensible code.
+          Five principles for maintainable, extensible code — with violations,
+          fixes, and what to say in interviews.
         </p>
       </header>
 
       <ConceptGrid>
-        {solidPrinciples.map((principle) => (
+        {solidPrinciples.map(({ letter, ...principle }) => (
           <ConceptCard
-            key={principle.letter}
-            badge={principle.letter}
-            title={principle.title}
-            description={principle.description}
+            key={letter}
+            id={letter.toLowerCase()}
+            badge={letter}
+            {...principle}
           />
         ))}
       </ConceptGrid>

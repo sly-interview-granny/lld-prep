@@ -1,5 +1,8 @@
+import { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { getPatternBySlug } from '../content/patterns';
+import { CodeTabs } from '../components/CodeTabs';
+import { getAdjacentPatterns, getPatternBySlug } from '../content/patterns';
+import { useVisitedPatterns } from '../hooks/useVisitedPatterns';
 
 interface ScaffoldSectionProps {
   title: string;
@@ -19,9 +22,55 @@ function ScaffoldSection({ title, content }: ScaffoldSectionProps) {
   );
 }
 
+interface CodeSectionProps {
+  python?: string;
+  java?: string;
+}
+
+function CodeSection({ python, java }: CodeSectionProps) {
+  const hasCode = Boolean(python?.trim() || java?.trim());
+
+  return (
+    <section className="scaffold-section">
+      <h2 className="scaffold-section__title">Code</h2>
+      {hasCode ? (
+        <CodeTabs python={python} java={java} variant="scaffold" />
+      ) : (
+        <p className="scaffold-section__placeholder">Add notes</p>
+      )}
+    </section>
+  );
+}
+
+interface InterviewTipsSectionProps {
+  tips?: string[];
+}
+
+function InterviewTipsSection({ tips }: InterviewTipsSectionProps) {
+  if (!tips?.length) return null;
+
+  return (
+    <section className="scaffold-section">
+      <h2 className="scaffold-section__title">Interview tips</h2>
+      <ul className="scaffold-section__tips">
+        {tips.map((tip) => (
+          <li key={tip}>{tip}</li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 export function PatternDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const pattern = slug ? getPatternBySlug(slug) : undefined;
+  const { markVisited } = useVisitedPatterns();
+
+  useEffect(() => {
+    if (slug && pattern) {
+      markVisited(slug);
+    }
+  }, [slug, pattern, markVisited]);
 
   if (!pattern) {
     return (
@@ -38,6 +87,8 @@ export function PatternDetailPage() {
       </div>
     );
   }
+
+  const { prev, next } = getAdjacentPatterns(pattern.slug);
 
   return (
     <div className="page">
@@ -61,8 +112,36 @@ export function PatternDetailPage() {
           title="Real-world example"
           content={pattern.example}
         />
-        <ScaffoldSection title="Code snippet" content={pattern.code} />
+        <CodeSection
+          python={pattern.codePython}
+          java={pattern.codeJava}
+        />
+        <InterviewTipsSection tips={pattern.interviewTips} />
       </div>
+
+      {(prev || next) && (
+        <nav className="pattern-detail-nav" aria-label="Pattern navigation">
+          {prev ? (
+            <Link to={`/patterns/${prev.slug}`} className="pattern-detail-nav__link">
+              <span className="pattern-detail-nav__label">Previous</span>
+              <span className="pattern-detail-nav__name">{prev.name}</span>
+            </Link>
+          ) : (
+            <span />
+          )}
+          {next ? (
+            <Link
+              to={`/patterns/${next.slug}`}
+              className="pattern-detail-nav__link pattern-detail-nav__link--next"
+            >
+              <span className="pattern-detail-nav__label">Next</span>
+              <span className="pattern-detail-nav__name">{next.name}</span>
+            </Link>
+          ) : (
+            <span />
+          )}
+        </nav>
+      )}
     </div>
   );
 }

@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
+import { useMarkVisited } from '../hooks/useMarkVisited';
 import { Sidebar } from './Sidebar';
 
 export function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  useMarkVisited();
 
   return (
     <div className="layout">

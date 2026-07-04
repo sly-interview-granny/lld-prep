@@ -1,5 +1,6 @@
 import { ConceptCard, ConceptGrid } from '../components/ConceptCard';
 import { relationships } from '../content/relationships';
+import { slugifyTitle } from '../lib/sectionNav';
 
 export function RelationshipsPage() {
   return (
@@ -7,7 +8,8 @@ export function RelationshipsPage() {
       <header className="page__header">
         <h1 className="page__title">Class Relationships</h1>
         <p className="page__subtitle">
-          How objects relate to each other in object-oriented design.
+          How objects relate to each other — IS-A, HAS-A, and USES-A with UML
+          intuition and interview examples.
         </p>
       </header>
 
@@ -15,9 +17,8 @@ export function RelationshipsPage() {
         {relationships.map((rel) => (
           <ConceptCard
             key={rel.title}
-            title={rel.title}
-            tag={rel.tag}
-            description={rel.description}
+            id={slugifyTitle(rel.title)}
+            {...rel}
           />
         ))}
       </ConceptGrid>
