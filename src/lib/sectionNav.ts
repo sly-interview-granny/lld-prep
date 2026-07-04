@@ -224,20 +224,3 @@ export function isSectionNavItemActive(
 
   return pathname === item.matchPath;
 }
-
-export function getSectionProgressPaths(section: SectionKey): string[] {
-  switch (section) {
-    case 'oop':
-      return oopNavItems.map((item) => item.path);
-    case 'relationships':
-      return relationshipNavItems.map((item) => item.path);
-    case 'solid':
-      return solidNavItems.map((item) => item.path);
-    case 'patterns':
-      return Object.values(getPatternNavByCategory())
-        .flat()
-        .map((item) => item.path);
-    default:
-      return [];
-  }
-}
