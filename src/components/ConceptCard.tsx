@@ -1,10 +1,12 @@
-import { CodeTabs } from './CodeTabs';
 import { ReactNode } from 'react';
+import { CodeTabs } from './CodeTabs';
+import { MarkdownContent } from './MarkdownContent';
 
 export interface ConceptCardProps {
   id?: string;
   title: string;
   description: string;
+  body?: string;
   definition: string;
   analogy: string;
   whenAsked: string;
@@ -31,10 +33,36 @@ function ConceptSection({ title, children }: ConceptSectionProps) {
   );
 }
 
+function SupplementList({
+  title,
+  items,
+  variant = 'default',
+}: {
+  title: string;
+  items: string[];
+  variant?: 'default' | 'mistakes';
+}) {
+  const listClass =
+    variant === 'mistakes'
+      ? 'concept-card__tips concept-card__tips--mistakes'
+      : 'concept-card__tips';
+
+  return (
+    <ConceptSection title={title}>
+      <ul className={listClass}>
+        {items.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+    </ConceptSection>
+  );
+}
+
 export function ConceptCard({
   id,
   title,
   description,
+  body,
   definition,
   analogy,
   whenAsked,
@@ -46,6 +74,8 @@ export function ConceptCard({
   tag,
   badge,
 }: ConceptCardProps) {
+  const hasRichBody = Boolean(body?.trim());
+
   return (
     <article className="concept-card" id={id}>
       <header className="concept-card__header">
@@ -55,47 +85,56 @@ export function ConceptCard({
       </header>
       <p className="concept-card__description">{description}</p>
 
-      <div className="concept-card__sections">
-        <ConceptSection title="Definition">
-          <p className="concept-card__text">{definition}</p>
-        </ConceptSection>
-
-        <ConceptSection title="Real-world analogy">
-          <p className="concept-card__text">{analogy}</p>
-        </ConceptSection>
-
-        {detailedExample && (
-          <ConceptSection title="Software example">
-            <p className="concept-card__text">{detailedExample}</p>
+      {hasRichBody ? (
+        <>
+          <div className="concept-card__body">
+            <MarkdownContent content={body!} />
+          </div>
+          <div className="concept-card__sections concept-card__sections--supplement">
+            <SupplementList title="Interview tips" items={interviewTips} />
+            {commonMistakes && commonMistakes.length > 0 && (
+              <SupplementList
+                title="Common mistakes"
+                items={commonMistakes}
+                variant="mistakes"
+              />
+            )}
+          </div>
+        </>
+      ) : (
+        <div className="concept-card__sections">
+          <ConceptSection title="Definition">
+            <p className="concept-card__text">{definition}</p>
           </ConceptSection>
-        )}
 
-        <ConceptSection title="When interviewers ask">
-          <p className="concept-card__text">{whenAsked}</p>
-        </ConceptSection>
-
-        <ConceptSection title="Code">
-          <CodeTabs python={codePython} java={codeJava} />
-        </ConceptSection>
-
-        <ConceptSection title="Interview tips">
-          <ul className="concept-card__tips">
-            {interviewTips.map((tip) => (
-              <li key={tip}>{tip}</li>
-            ))}
-          </ul>
-        </ConceptSection>
-
-        {commonMistakes && commonMistakes.length > 0 && (
-          <ConceptSection title="Common mistakes">
-            <ul className="concept-card__tips concept-card__tips--mistakes">
-              {commonMistakes.map((mistake) => (
-                <li key={mistake}>{mistake}</li>
-              ))}
-            </ul>
+          <ConceptSection title="Real-world analogy">
+            <p className="concept-card__text">{analogy}</p>
           </ConceptSection>
-        )}
-      </div>
+
+          {detailedExample && (
+            <ConceptSection title="Software example">
+              <p className="concept-card__text">{detailedExample}</p>
+            </ConceptSection>
+          )}
+
+          <ConceptSection title="When interviewers ask">
+            <p className="concept-card__text">{whenAsked}</p>
+          </ConceptSection>
+
+          <ConceptSection title="Code">
+            <CodeTabs python={codePython} java={codeJava} />
+          </ConceptSection>
+
+          <SupplementList title="Interview tips" items={interviewTips} />
+          {commonMistakes && commonMistakes.length > 0 && (
+            <SupplementList
+              title="Common mistakes"
+              items={commonMistakes}
+              variant="mistakes"
+            />
+          )}
+        </div>
+      )}
     </article>
   );
 }

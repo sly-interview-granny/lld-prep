@@ -1,10 +1,12 @@
 import type { SolidPrinciple } from './types';
+import { solidBodies } from './conceptBodies/solid';
 
 export type { SolidPrinciple };
 
 export const solidPrinciples: SolidPrinciple[] = [
   {
     letter: 'S',
+    body: solidBodies.S,
     title: 'Single Responsibility Principle',
     description: 'A class should have only one reason to change.',
     definition:
@@ -65,6 +67,7 @@ class EmployeeRepository {
   },
   {
     letter: 'O',
+    body: solidBodies.O,
     title: 'Open/Closed Principle',
     description: 'Open for extension, closed for modification.',
     definition:
@@ -134,6 +137,7 @@ class Checkout {
   },
   {
     letter: 'L',
+    body: solidBodies.L,
     title: 'Liskov Substitution Principle',
     description:
       'Subtypes must be substitutable for their base types without breaking correctness.',
@@ -219,6 +223,7 @@ class Geometry {
   },
   {
     letter: 'I',
+    body: solidBodies.I,
     title: 'Interface Segregation Principle',
     description:
       'Clients should not depend on methods they do not use; prefer small, focused interfaces.',
@@ -298,6 +303,7 @@ class Robot implements Workable {
   },
   {
     letter: 'D',
+    body: solidBodies.D,
     title: 'Dependency Inversion Principle',
     description:
       'High-level modules should depend on abstractions, not concrete implementations.',

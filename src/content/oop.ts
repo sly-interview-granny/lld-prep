@@ -1,10 +1,12 @@
 import type { InterviewConcept } from './types';
+import { oopBodies } from './conceptBodies/oop';
 
 export type Concept = InterviewConcept;
 
 export const oopConcepts: Concept[] = [
   {
     title: 'Abstraction',
+    body: oopBodies.Abstraction,
     description: 'Hides unnecessary details to reduce complexity.',
     definition:
       'Abstraction focuses on what an object does rather than how it does it, exposing only the essential operations callers need. You define a contract — through an interface, abstract class, or a small public API — and push implementation details behind that boundary. In system design, abstraction is how you manage complexity: each layer (controller → service → repository) speaks in terms of capabilities, not concrete classes. It reduces coupling because clients depend on stable contracts, not volatile internals. Interviewers care about abstraction because it is the foundation of modular LLD: you can swap Stripe for PayPal without rewriting checkout logic. Good abstraction also makes code self-documenting — the interface name tells you what is possible without reading 200 lines of implementation.',
@@ -63,6 +65,7 @@ class Checkout {
   },
   {
     title: 'Polymorphism',
+    body: oopBodies.Polymorphism,
     description:
       'Allows one interface to be used for general activities (flexibility).',
     definition:
@@ -134,6 +137,7 @@ class Alerts {
   },
   {
     title: 'Inheritance',
+    body: oopBodies.Inheritance,
     description: 'Shares code across related classes (reusability).',
     definition:
       'Inheritance models an IS-A relationship: a subclass acquires fields and methods from a parent and can override or extend behavior. It promotes code reuse by letting you define common logic once in a base class and specialize in subclasses. However, inheritance creates tight coupling — changes to the parent can break all children (the fragile base class problem). Modern LLD guidance favors shallow hierarchies and composition when behavior varies independently of type taxonomy. Inheritance works well when subtypes are truly substitutable for the parent (Liskov Substitution Principle). In interviews, justify inheritance only when the relationship is permanent, structural, and substitutable — otherwise prefer interfaces plus composition.',
@@ -226,6 +230,7 @@ class HourlyEmployee extends Employee {
   },
   {
     title: 'Encapsulation',
+    body: oopBodies.Encapsulation,
     description:
       "Restricts direct access to data to protect an object's state.",
     definition:

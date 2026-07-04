@@ -473,6 +473,20 @@ a:hover {
   border-bottom: 1px solid var(--border-subtle);
 }
 
+.concept-card__body {
+  margin-bottom: 1.25rem;
+}
+
+.concept-card__body .pattern-body {
+  max-width: none;
+}
+
+.concept-card__sections--supplement {
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
 .concept-card__sections {
   display: flex;
   flex-direction: column;

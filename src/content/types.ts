@@ -1,5 +1,7 @@
 export interface InterviewConcept {
   title: string;
+  /** Rich narrative markdown body (preferred for detail view). */
+  body?: string;
   /** One-line summary shown in the card header area */
   description: string;
   /** Expanded definition (4–6 sentences, interview depth) */
