@@ -2,6 +2,10 @@
 
 A static, locally runnable interview prep site for Low-Level Design (LLD) fundamentals — OOP concepts, class relationships, SOLID principles, and design patterns.
 
+**Live site:** [https://sly-interview-granny.github.io/lld-prep/](https://sly-interview-granny.github.io/lld-prep/)
+
+[![Live site](https://img.shields.io/badge/Live%20site-GitHub%20Pages-2ea44f?style=for-the-badge)](https://sly-interview-granny.github.io/lld-prep/)
+
 ## Quick Start
 
 ```bash
@@ -62,3 +66,4 @@ Empty fields render as dashed "Add notes" placeholders on the detail page.
 - Vite + React + TypeScript
 - React Router
 - Single global stylesheet (no UI library)
+
