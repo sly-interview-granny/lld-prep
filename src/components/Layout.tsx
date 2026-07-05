@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { ActiveSectionProvider } from '../context/ActiveSectionContext';
+import { ScrollToTop } from './ScrollToTop';
 import { Sidebar } from './Sidebar';
 
 export function Layout() {
@@ -8,6 +9,7 @@ export function Layout() {
 
   return (
     <ActiveSectionProvider>
+      <ScrollToTop />
       <div className="layout">
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         <div className="layout__main">
